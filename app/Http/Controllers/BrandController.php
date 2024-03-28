@@ -59,8 +59,14 @@ class BrandController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Brand $brand)
+    public function destroy(string $id)
     {
-        //
+        $brand = brand::find($id);
+        if (!$brand) {
+            return response()->json(['message' => 'Brand not found'], 404);
+        }
+        $brand->delete();
+
+        return response()->json(['message' => 'Brand deleted successfully']);
     }
 }
