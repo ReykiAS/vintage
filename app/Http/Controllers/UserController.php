@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Image;
 use App\Http\Requests\UserStoreRequest;
+use App\Http\Requests\UserUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -59,10 +60,23 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
+    public function update(UserUpdateRequest $request, string $id)
+{
+    $validated = $request->validated();
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
     }
+
+    $user->update($validated);
+    if ($request->hasFile('photo')) {
+        $user->updateImage($request);
+    }
+
+    return response()->json(['message' => 'User updated successfully', 'user' => $user]);
+}
+
 
     /**
      * Remove the specified resource from storage.
