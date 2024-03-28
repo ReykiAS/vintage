@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
-use Illuminate\Http\Request;
 use App\Http\Resources\BrandResource;
 use App\Http\Requests\BrandStoreRequest as RequestsBrandStoreRequest;
+use App\Http\Requests\BrandUpdateRequest as RequestsBrandUpdateRequest;
 
 class BrandController extends Controller
 {
@@ -44,23 +44,32 @@ class BrandController extends Controller
         if ($brand) {
             return BrandResource::make($brand)->withDetail();
         } else {
-            return response()->json(['message' => 'Brand tidak ditemukan'], 404);
+            return response()->json(['message' => 'Brand not found'], 404);
         }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Brand $brand)
+    public function update(RequestsBrandUpdateRequest $request, string $id)
     {
-        //
+        $validated = $request->validated();
+        $brand = Brand::find($id);
+
+        if (!$brand) {
+            return response()->json(['message' => 'Brand not found'], 404);
+        }
+        $brand->update($validated);
+        $brand->updateImage($request);
+
+        return response()->json(['message' => 'Brand succesfully updated', 'brand' => BrandResource::make($brand)->withDetail()]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Brand $brand)
+    public function destroy(string $id)
     {
-        //
+       //
     }
 }
