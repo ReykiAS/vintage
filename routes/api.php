@@ -23,8 +23,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function() {
         Route::post('/logout', [UserController::class, 'logout']);
 
+        Route::get('/brand/{id}', [BrandController::class, 'show']);
         Route::post('/brand', [BrandController::class, 'store']);
-        Route::apiResource('brands', BrandController::class)->except(['store']);
+        Route::apiResource('brands', BrandController::class)->except(['store', 'show']);
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

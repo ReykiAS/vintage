@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use Illuminate\Http\Request;
+use App\Http\Resources\BrandResource;
 use App\Http\Requests\BrandStoreRequest as RequestsBrandStoreRequest;
 
 class BrandController extends Controller
@@ -13,7 +14,8 @@ class BrandController extends Controller
      */
     public function index()
     {
-        //
+        $brand = Brand::all();
+        return BrandResource::collection($brand);
     }
 
     /**
@@ -35,9 +37,15 @@ class BrandController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Brand $brand)
+    public function show(string $id)
     {
-        //
+        $brand = Brand::with('image')->find($id);
+
+        if ($brand) {
+            return BrandResource::make($brand)->withDetail();
+        } else {
+            return response()->json(['message' => 'Brand tidak ditemukan'], 404);
+        }
     }
 
     /**
