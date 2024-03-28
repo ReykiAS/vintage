@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use Illuminate\Http\Request;
+use App\Http\Requests\BrandStoreRequest as RequestsBrandStoreRequest;
 
 class BrandController extends Controller
 {
@@ -18,9 +19,17 @@ class BrandController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(RequestsBrandStoreRequest $request)
     {
-        //
+        $validated = $request->validated();
+        $brand = Brand::create($validated);
+
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('photos');
+            $brand->addImage($photoPath);
+        }
+
+        return response()->json(['message' => 'Brand created successfully'], 201);
     }
 
     /**
