@@ -23,9 +23,11 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function() {
         Route::post('/logout', [UserController::class, 'logout']);
 
+        Route::put('/brand/{id}', [BrandController::class, 'update']);
+        Route::delete('/brand/{id}', [BrandController::class, 'destroy']);
         Route::get('/brand/{id}', [BrandController::class, 'show']);
         Route::post('/brand', [BrandController::class, 'store']);
-        Route::apiResource('brands', BrandController::class)->except(['store', 'show']);
+        Route::apiResource('brands', BrandController::class)->except(['store', 'show', 'update', 'destroy']);
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
