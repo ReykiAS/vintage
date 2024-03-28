@@ -78,4 +78,18 @@ class BrandController extends Controller
 
         return response()->json(['message' => 'Brand deleted successfully']);
     }
+
+    /**
+     * Restore the removed resource from storage.
+     */
+    public function restore($id)
+    {
+        $brand = Brand::withTrashed()->find($id);
+        if (!$brand) {
+            return response()->json(['message' => 'Brand not found'], 404);
+        }
+        $brand->restore();
+
+        return response()->json(['message' => 'Brand succesfully restored.']);
+    }
 }
