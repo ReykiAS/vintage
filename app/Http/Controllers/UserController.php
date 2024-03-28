@@ -85,4 +85,13 @@ class UserController extends Controller
     {
         //
     }
+    public function logout(Request $request){
+        if ($request->user()) {
+            $request->user()->currentAccessToken()->delete();
+            return response()->json(['message' => 'User logged out successfully']);
+        } else {
+            return response()->json(['message' => 'No user is currently authenticated'], 401);
+        }
+    }
+
 }
