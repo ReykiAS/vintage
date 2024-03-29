@@ -78,4 +78,10 @@ class CategoryController extends Controller
 
         return response()->json(['message' => 'Category deleted successfully']);
     }
+        public function showSoftDeleted()
+    {
+        $deletedCategories = Category::onlyTrashed()->get();
+        return response()->json($deletedCategories);
+    }
+
 }

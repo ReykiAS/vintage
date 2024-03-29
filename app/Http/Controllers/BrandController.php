@@ -92,4 +92,5 @@ class BrandController extends Controller
 
         return response()->json(['message' => 'Brand succesfully restored.']);
     }
+    
 }
