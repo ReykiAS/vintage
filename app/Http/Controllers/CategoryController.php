@@ -36,9 +36,15 @@ class CategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Category $category)
+    public function show(string $id)
     {
-        //
+        $category = Category::with('image')->find($id);
+
+        if ($category) {
+            return CategoryResource::make($category)->withDetail();
+        } else {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
     }
 
     /**
