@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Http\Requests\CategoryStoreRequest;
+use App\Http\Requests\CategoryUpdateRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -50,9 +51,18 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Category $category)
+    public function update(CategoryUpdateRequest $request, string $id)
     {
-        //
+        $validated = $request->validated();
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+        $category->update($validated);
+        $category->updateImage($request);
+
+        return response()->json(['message' => 'Category succesfully updated', 'category' => CategoryResource::make($category)->withDetail()]);
     }
 
     /**
