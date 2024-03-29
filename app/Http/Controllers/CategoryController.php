@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Http\Requests\CategoryStoreRequest;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -18,9 +19,17 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CategoryStoreRequest $request)
     {
-        //
+        $validated = $request->validated();
+        $category = Category::create($validated);
+
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('photos');
+            $category->addImage($photoPath);
+        }
+
+        return response()->json(['message' => 'Category created successfully'], 201);
     }
 
     /**
