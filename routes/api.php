@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/brand/{id}', [BrandController::class, 'show']);
         Route::post('/brand', [BrandController::class, 'store']);
         Route::apiResource('brands', BrandController::class)->except(['store', 'show', 'update', 'destroy']);
+        Route::get('/categories', [CategoryController::class, 'index']);
         Route::apiResource('/category', CategoryController::class);
     });
 
