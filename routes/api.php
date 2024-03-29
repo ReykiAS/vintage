@@ -24,6 +24,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('/user', UserController::class)->except(['store']);
 
     Route::middleware('auth:sanctum')->group(function() {
+        Route::put('/categories/{id}/restore', [CategoryController::class, 'restore']);
         Route::post('/logout', [UserController::class, 'logout']);
         Route::get('categories/deleted', [CategoryController::class, 'showSoftDeleted']);
         Route::put('brand/{id}/restore', [BrandController::class, 'restore']);
