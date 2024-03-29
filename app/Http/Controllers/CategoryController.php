@@ -83,5 +83,15 @@ class CategoryController extends Controller
         $deletedCategories = Category::onlyTrashed()->get();
         return response()->json($deletedCategories);
     }
+    public function restore($id)
+    {
+        $category = Category::withTrashed()->find($id);
+        if (!$category) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+        $category->restore();
+
+        return response()->json(['message' => 'Category succesfully restored.']);
+    }
 
 }
