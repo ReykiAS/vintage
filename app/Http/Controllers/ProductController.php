@@ -48,15 +48,7 @@ class ProductController extends Controller
      */
     public function store(ProductStoreRequest $request)
     {
-        $validated = $request->validated();
-        $product = Product::create($validated);
-
-        if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('photos');
-            $product->addImage($photoPath);
-        }
-
-        return response()->json(['message' => 'Product created successfully'], 201);
+        
     }
 
     /**
@@ -64,13 +56,7 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        $product = Product::with('image')->find($id);
-
-        if ($product) {
-            return ProductResource::make($product)->withDetail();
-        } else {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
+        
     }
 
     /**
@@ -78,16 +64,7 @@ class ProductController extends Controller
      */
     public function update(ProductUpdateRequest $request, string $id)
     {
-        $validated = $request->validated();
-        $product = Product::find($id);
-
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-        $product->update($validated);
-        $product->updateImage($request);
-
-        return response()->json(['message' => 'Product succesfully updated', 'product' => ProductResource::make($product)->withDetail()]);
+        
     }
 
     /**
@@ -95,13 +72,7 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        $product = Product::find($id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-        $product->delete();
-
-        return response()->json(['message' => 'Product deleted successfully']);
+       
     }
 
     /**
@@ -109,18 +80,11 @@ class ProductController extends Controller
      */
     public function showSoftDeleted()
     {
-        $deletedProduct = Product::onlyTrashed()->get();
-        return response()->json($deletedProduct);
+        
     }
 
     public function restore($id)
     {
-        $product = Product::withTrashed()->find($id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-        $product->restore();
-
-        return response()->json(['message' => 'Product succesfully restored.']);
+        
     }
 }
