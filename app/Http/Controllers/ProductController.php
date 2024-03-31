@@ -64,7 +64,7 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        
+      
     }
 
     /**
@@ -89,7 +89,13 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        
+        $product = Product::find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+        $product->delete();
+
+        return response()->json(['message' => 'Product deleted successfully']);
     }
 
     /**
@@ -97,11 +103,11 @@ class ProductController extends Controller
      */
     public function showSoftDeleted()
     {
-        
+      
     }
 
     public function restore($id)
     {
-        
+       
     }
 }
