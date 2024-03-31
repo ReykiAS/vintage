@@ -64,7 +64,13 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-      
+        $product = Product::with('image')->find($id);
+
+        if ($product) {
+            return ProductResource::make($product)->withDetail();
+        } else {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
     }
 
     /**
@@ -108,6 +114,6 @@ class ProductController extends Controller
 
     public function restore($id)
     {
-       
+        
     }
 }
