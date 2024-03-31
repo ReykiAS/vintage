@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Favorite;
 use Illuminate\Http\Request;
 use App\Http\Requests\FavoriteStoreRequest;
+use App\Http\Resources\FavoriteResource;
 
 class FavoriteController extends Controller
 {
@@ -13,7 +14,8 @@ class FavoriteController extends Controller
      */
     public function index()
     {
-        //
+        $favorite = Favorite::all();
+        return FavoriteResource::collection($favorite);
     }
 
     /**
