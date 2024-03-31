@@ -32,7 +32,8 @@ Route::prefix('v1')->group(function () {
 
         // Product 
         Route::apiResource('products', ProductController::class)->except(['index', 'show']);
-      
+        Route::put('/products/{id}/restore', [ProductController::class, 'restore']);
+        Route::get('/products/deleted/trash', [ProductController::class, 'showSoftDeleted']); 
 
         Route::put('/categories/{id}/restore', [CategoryController::class, 'restore']);
         Route::post('/logout', [UserController::class, 'logout']);
