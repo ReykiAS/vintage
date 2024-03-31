@@ -64,7 +64,7 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-   
+        
     }
 
     /**
@@ -72,7 +72,16 @@ class ProductController extends Controller
      */
     public function update(ProductUpdateRequest $request, string $id)
     {
-       
+        $validated = $request->validated();
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+        $product->update($validated);
+        $product->updateImage($request);
+
+        return response()->json(['message' => 'Product succesfully updated', 'product' => ProductResource::make($product)->withDetail()]);
     }
 
     /**
@@ -88,7 +97,7 @@ class ProductController extends Controller
      */
     public function showSoftDeleted()
     {
-       
+        
     }
 
     public function restore($id)
