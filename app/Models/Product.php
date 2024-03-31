@@ -37,6 +37,11 @@ class Product extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function favorite()
+    {
+        return $this->belongsTo(Favorite::class);
+    }
+
     public function images()
     {
         return $this->morphMany(Image::class, 'imageable');

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ProductController;
 use App\Models\Category;
 
@@ -47,6 +48,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::apiResource('/category', CategoryController::class);
 
+        Route::apiResource('/favorites', FavoriteController::class);
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
