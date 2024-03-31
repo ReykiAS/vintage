@@ -103,7 +103,7 @@ class ProductController extends Controller
      */
     public function showSoftDeleted()
     {
-      
+        
     }
 
     public function restore($id)
