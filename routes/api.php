@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
 use App\Models\Category;
 
 /*
@@ -23,7 +24,17 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [UserController::class, 'login'])->name('login');
     Route::apiResource('/user', UserController::class)->except(['store']);
 
+    // Product Index dan Show
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+
     Route::middleware('auth:sanctum')->group(function() {
+
+        // Product 
+        Route::apiResource('products', ProductController::class)->except(['index', 'show']);
+        Route::put('/products/{id}/restore', [ProductController::class, 'restore']);
+        Route::get('/products/deleted/trash', [ProductController::class, 'showSoftDeleted']); // Mengarahkan ke metode showSoftDeleted
+
         Route::put('/categories/{id}/restore', [CategoryController::class, 'restore']);
         Route::post('/logout', [UserController::class, 'logout']);
         Route::get('categories/deleted', [CategoryController::class, 'showSoftDeleted']);
@@ -35,6 +46,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('brands', BrandController::class)->except(['store', 'show', 'update', 'destroy']);
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::apiResource('/category', CategoryController::class);
+
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
