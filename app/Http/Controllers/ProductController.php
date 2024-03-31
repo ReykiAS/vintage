@@ -109,18 +109,11 @@ class ProductController extends Controller
      */
     public function showSoftDeleted()
     {
-        $deletedProduct = Product::onlyTrashed()->get();
-        return response()->json($deletedProduct);
+       
     }
 
     public function restore($id)
     {
-        $product = Product::withTrashed()->find($id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-        $product->restore();
-
-        return response()->json(['message' => 'Product succesfully restored.']);
+        
     }
 }
