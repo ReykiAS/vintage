@@ -14,12 +14,16 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $originalPrice = (float) $this->price;
+        $discountedPrice = (float) $this->discountedPrice;
         $data = [
             'Image' => $this->image ? $this->image->url : null, // Tampilkan URL gambar terlebih dahulu
             'Name' => $this->name,
             'Price' => $this->price,
-            'Discounted Price' => $this->discountedPrice,
         ];
+        if ($discountedPrice !== $originalPrice) {
+            $data['Discounted Price'] = $discountedPrice;
+        }
 
         if ($this->isDetail) {
         $data['Item Description'] = $this->description;
