@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Favorite;
 use Illuminate\Http\Request;
+use App\Http\Requests\FavoriteStoreRequest;
 
 class FavoriteController extends Controller
 {
@@ -18,9 +19,12 @@ class FavoriteController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(FavoriteStoreRequest $request)
     {
-        //
+        $validated = $request->validated();
+        $favorite = Favorite::create($validated);
+
+        return response()->json(['message' => 'Favorite created successfully'], 201);
     }
 
     /**
