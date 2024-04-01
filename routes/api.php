@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ProductController;
@@ -52,6 +53,8 @@ Route::prefix('v1')->group(function () {
         
         // Favorite
         Route::apiResource('/favorites', FavoriteController::class);
+
+        Route::apiResource('/carts', CartController::class);
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
