@@ -38,7 +38,7 @@ class ProductController extends Controller
         }
 
         // pagination mechanism
-        $products = $products->paginate(10);   
+        $products = $products->paginate(10);
 
        return ProductResource::collection($products);
     }

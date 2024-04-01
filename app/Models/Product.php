@@ -50,4 +50,8 @@ class Product extends Model
     {
         return $this->morphOne(Image::class, 'imageable');
     }
+    public function getDiscountedPriceAttribute()
+    {
+        return $this->price - ($this->discount / 100 * $this->price);
+    }
 }

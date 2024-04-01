@@ -18,8 +18,9 @@ class ProductResource extends JsonResource
             'Image' => $this->image ? $this->image->url : null, // Tampilkan URL gambar terlebih dahulu
             'Name' => $this->name,
             'Price' => $this->price,
+            'Discounted Price' => $this->discountedPrice,
         ];
-        
+
         if ($this->isDetail) {
         $data['Item Description'] = $this->description;
         $data['Store Name'] = $this->user->username;
