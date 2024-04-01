@@ -93,4 +93,9 @@ class BrandController extends Controller
         return response()->json(['message' => 'Brand succesfully restored.']);
     }
     
+    public function showSoftDeleted()
+    {
+        $deletedBrand = Brand::onlyTrashed()->get();
+        return response()->json($deletedBrand);
+    }
 }

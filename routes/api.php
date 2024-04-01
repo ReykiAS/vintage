@@ -30,24 +30,27 @@ Route::prefix('v1')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function() {
+        Route::post('/logout', [UserController::class, 'logout']);
 
         // Product 
         Route::apiResource('products', ProductController::class)->except(['index', 'show']);
         Route::put('/products/{id}/restore', [ProductController::class, 'restore']);
         Route::get('/products/deleted/trash', [ProductController::class, 'showSoftDeleted']); 
 
+        // Categories
         Route::put('/categories/{id}/restore', [CategoryController::class, 'restore']);
-        Route::post('/logout', [UserController::class, 'logout']);
         Route::get('categories/deleted', [CategoryController::class, 'showSoftDeleted']);
-        Route::put('brand/{id}/restore', [BrandController::class, 'restore']);
-        Route::put('/brand/{id}', [BrandController::class, 'update']);
-        Route::delete('/brand/{id}', [BrandController::class, 'destroy']);
-        Route::get('/brand/{id}', [BrandController::class, 'show']);
-        Route::post('/brand', [BrandController::class, 'store']);
-        Route::apiResource('brands', BrandController::class)->except(['store', 'show', 'update', 'destroy']);
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::apiResource('/category', CategoryController::class);
 
+        // Brand
+        Route::put('brand/{id}/restore', [BrandController::class, 'restore']);
+        Route::apiResource('brand', BrandController::class);
+
+        Route::get('/brands/deleted/trash', [BrandController::class, 'showSoftDeleted']);
+        Route::apiResource('brands', BrandController::class)->except(['store', 'show', 'update', 'destroy']);
+        
+        // Favorite
         Route::apiResource('/favorites', FavoriteController::class);
     });
 
