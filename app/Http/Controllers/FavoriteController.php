@@ -14,7 +14,13 @@ class FavoriteController extends Controller
      */
     public function index()
     {
-        $favorite = Favorite::all();
+        $user = auth('sanctum')->user();
+        $favorite = new Favorite;
+
+        if ($user){
+            $favorite = $favorite->where('user_id', $user->id);
+        }
+        $favorite = $favorite->get();
         return FavoriteResource::collection($favorite);
     }
 
