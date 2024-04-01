@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CartStoreRequest;
+use App\Http\Resources\CartResource;
 use App\Models\Cart;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,14 @@ class CartController extends Controller
      */
     public function index()
     {
-        //
+        $user = auth('sanctum')->user();
+        $cart = new Cart;
+
+        if ($user){
+            $cart = $cart->where('user_id', $user->id);
+        }
+        $cart = $cart->get();
+        return CartResource::collection($cart);
     }
 
     /**
