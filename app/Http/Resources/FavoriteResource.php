@@ -16,7 +16,9 @@ class FavoriteResource extends JsonResource
     {
         $data = [
             'id' => $this->id,
-            'user' => $this->user, 
+            'user_id' => $this->user_id,
+            'product_id' => $this->product_id,
+            'fullname' => $this->user->fullname, 
             'product' => new ProductResource($this->product), 
         ];
 
