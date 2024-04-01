@@ -20,6 +20,11 @@ class FavoriteResource extends JsonResource
             'user' => $this->whenLoaded('user'),
         ];
 
+        if ($this->relationLoaded('product')) {
+            $product = $this->product;
+            $data['product']['image_url'] = $product->image ? $product->image->url : null; // Assuming 'image' is the relationship name and 'url' is the image attribute
+        }    
+
         return $data;
     }
 
