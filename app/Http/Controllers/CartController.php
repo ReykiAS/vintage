@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CartStoreRequest;
 use App\Models\Cart;
 use Illuminate\Http\Request;
 
@@ -18,9 +19,12 @@ class CartController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CartStoreRequest $request)
     {
-        //
+        $validated = $request->validated();
+        $cart = Cart::create($validated);
+
+        return response()->json(['message' => 'Cart added successfully'], 201);
     }
 
     /**
