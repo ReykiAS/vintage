@@ -17,7 +17,9 @@ class ImageFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'url' => fake()->imageUrl(),
+            'imageable_type' => null, // Set imageable_type dynamically in seeder
+            'imageable_id' => null, // Set imageable_id dynamically in seeder
         ];
     }
 }
