@@ -48,8 +48,14 @@ class FavoriteController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Favorite $favorite)
+    public function destroy(string $id)
     {
-        //
+        $favorite = Favorite::find($id);
+        if (!$favorite) {
+            return response()->json(['message' => 'Favorite not found'], 404);
+        }
+        $favorite->delete();
+
+        return response()->json(['message' => 'Favorite deleted successfully'], 200);
     }
 }
