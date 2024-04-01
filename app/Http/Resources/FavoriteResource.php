@@ -16,8 +16,8 @@ class FavoriteResource extends JsonResource
     {
         $data = [
             'id' => $this->id,
-            'product' => new ProductResource($this->whenLoaded('product')),
-            'user' => $this->whenLoaded('user'),
+            'user' => $this->user, 
+            'product' => new ProductResource($this->product), 
         ];
 
         if ($this->relationLoaded('product')) {
