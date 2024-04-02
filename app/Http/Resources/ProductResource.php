@@ -21,12 +21,14 @@ class ProductResource extends JsonResource
             'Image' => $this->image ? $this->image->url : null, // Tampilkan URL gambar terlebih dahulu
             'Name' => $this->name,
             'Price' => $this->price,
+            'size' => $this->variants->isNotEmpty() ? $this->variants->pluck('size') : null,
         ];
         if ($discountedPrice !== $originalPrice) {
             $data['Discounted Price'] = $discountedPrice;
         }
 
         if ($this->isDetail) {
+        $data['quality'] = $this->variants->isNotEmpty() ? $this->variants->pluck('quality') : null;
         $data['Item Description'] = $this->description;
         $data['Store Name'] = $this->user->username;
         $data['Category'] = $this->category->name;
