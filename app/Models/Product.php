@@ -59,4 +59,8 @@ class Product extends Model
     {
         return $this->price - ($this->discount / 100 * $this->price);
     }
+    public function variants()
+    {
+        return $this->hasMany(Variant::class);
+    }
 }

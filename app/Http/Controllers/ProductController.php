@@ -55,6 +55,14 @@ class ProductController extends Controller
             $photoPath = $request->file('photo')->store('photos');
             $product->addImage($photoPath);
         }
+        if ($request->has('variants') && is_array($request->variants)) {
+            foreach ($request->variants as $variant) {
+                $product->variants()->create([
+                    'size' => $variant['size'],
+                    'quality' => $variant['quality'],
+                ]);
+            }
+        }
 
         return response()->json(['message' => 'Product created successfully'], 201);
     }
