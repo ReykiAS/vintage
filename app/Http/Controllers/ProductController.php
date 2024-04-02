@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Variant;
 use Illuminate\Http\Request;
 use App\Http\Resources\ProductResource;
 use App\Http\Requests\ProductStoreRequest;
@@ -97,6 +98,25 @@ class ProductController extends Controller
         }
         $product->update($validated);
         $product->updateImage($request);
+        if ($request->has('variants')) {
+            foreach ($request->variants as $variantData) {
+                if (isset($variantData['id'])) {
+                    $variant = Variant::find($variantData['id']);
+
+                    if ($variant && $variant->product_id === $product->id) {
+                        $variant->update([
+                            'size' => $variantData['size'],
+                            'quality' => $variantData['quality'],
+                        ]);
+                    }
+                } else {
+                    $product->variants()->create([
+                        'size' => $variantData['size'],
+                        'quality' => $variantData['quality'],
+                    ]);
+                }
+            }
+        }
 
         return response()->json(['message' => 'Product succesfully updated', 'product' => ProductResource::make($product)->withDetail()]);
     }
