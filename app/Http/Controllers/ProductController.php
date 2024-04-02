@@ -16,6 +16,9 @@ class ProductController extends Controller
     {
         $products = Product::with('category', 'brand', 'images', 'user');
 
+        if ($request->has('withVariant')) {
+            $products->with('variants');
+        }
 
         if ($request->has('search')) {
             $products = $products->where('name', 'like', '%' . $request->search . '%');
@@ -38,7 +41,7 @@ class ProductController extends Controller
         }
 
         // pagination mechanism
-        $products = $products->paginate(10);
+        $products = $products->paginate(20);
 
        return ProductResource::collection($products);
     }
