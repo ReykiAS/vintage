@@ -13,38 +13,13 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index( Request $request)
+    public function index(Request $request, Product $products)
     {
-        $products = Product::with('category', 'brand', 'images', 'user');
+        $products->loadMissing('category', 'brand', 'images', 'user','variants');
 
-        if ($request->has('withVariant')) {
-            $products->with('variants');
-        }
+        $products = Product::filter($request)->paginate(20);
 
-        if ($request->has('search')) {
-            $products = $products->where('name', 'like', '%' . $request->search . '%');
-        }
-
-         // check if the user is filtering by brand
-         if ($request->has('brand')) {
-            $products = $products->where('brand_id', $request->brand);
-        }
-
-        // check if the user is filtering by price range
-        if ($request->has('min_price') && $request->has('max_price')) {
-            $products = $products->whereBetween('price', [$request->min_price, $request->max_price]);
-        }
-
-        // check if the user is sorting the products by name, and price in ascending or descending
-        if ($request->has('sort_by')) {
-            $sortOrder = $request->has('sort_order') ? $request->sort_order : 'asc';
-            $products = $products->orderBy($request->sort_by, $sortOrder);
-        }
-
-        // pagination mechanism
-        $products = $products->paginate(20);
-
-       return ProductResource::collection($products);
+        return ProductResource::collection($products);
     }
 
     /**
