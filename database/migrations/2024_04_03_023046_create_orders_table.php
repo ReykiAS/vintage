@@ -17,13 +17,6 @@ return new class extends Migration
             $table->string('status')->default('new');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users');
-<<<<<<< HEAD
-            $table->unsignedBigInteger('cart_id');
-            $table->foreign('cart_id')->references('id')->on('carts');
-            $table->unsignedBigInteger('order_id');
-            $table->foreign('order_id')->references('id')->on('orders');
-=======
->>>>>>> 3ceaaced2b831be4196143a6409977dc55f3d8f9
             $table->timestamps();
         });
     }
