@@ -16,9 +16,7 @@ class ProductController extends Controller
     public function index(Request $request, Product $products)
     {
         $products->loadMissing('category', 'brand', 'images', 'user','variants');
-
         $products = Product::filter($request)->paginate(20);
-
         return ProductResource::collection($products);
     }
 
