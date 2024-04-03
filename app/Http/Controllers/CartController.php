@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CartStoreRequest;
+use App\Http\Requests\CartRequest;
 use App\Http\Resources\CartResource;
 use App\Models\Cart;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use App\Models\Product;
 
 class CartController extends Controller
 {
@@ -28,13 +27,23 @@ class CartController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CartStoreRequest $request)
+    public function store(CartRequest $request)
     {
         $validated = $request->validated();
+
+        // Retrieve product details (assuming a relationship between Cart and Product)
+        $product = Product::findOrFail($validated['product_id']);
+
+        // Check available quantity
+        if ($product->qty < $validated['qty']) {
+            return response()->json(['error' => 'Insufficient stock available'], 400);
+        }
+
+        // Create cart item only if stock is sufficient
         $cart = Cart::create($validated);
 
         return response()->json(['message' => 'Cart added successfully'], 201);
-    }
+        }
 
     /**
      * Display the specified resource.
@@ -47,9 +56,27 @@ class CartController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Cart $cart)
+    public function update(CartRequest $request, string $id)
     {
-        //
+        $validated = $request->validated();
+
+        // Retrieve product details (assuming a relationship between Cart and Product)
+        $product = Product::findOrFail($validated['product_id']);
+
+        // Check available quantity
+        if ($product->qty < $validated['qty']) {
+            return response()->json(['error' => 'Insufficient stock available'], 400);
+        }
+
+        $cart = Cart::findOrFail($id);
+
+        if (!$cart) {
+            return response()->json(['message' => 'Cart not found'], 404);
+        }
+
+        $cart->update($validated);
+
+        return response()->json(['message' => 'Cart succesfully updated', 'cart' => CartResource::make($cart)]);
     }
 
     /**
