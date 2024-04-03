@@ -39,59 +39,47 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        $category = Category::with('image')->find($id);
-
-        if ($category) {
-            return CategoryResource::make($category)->withDetail();
-        } else {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
+        $category = Category::findOrFail($id);
+        $category->loadMissing('image');
+        return new CategoryResource($category);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(CategoryUpdateRequest $request, string $id)
+    public function update(CategoryUpdateRequest $request,  Category $category)
     {
         $validated = $request->validated();
-        $category = Category::find($id);
-
-        if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
         $category->update($validated);
         $category->updateImage($request);
+        return response()->json(['message' => 'Category successfully updated', 'category' => new CategoryResource($category)]);
 
-        return response()->json(['message' => 'Category succesfully updated', 'category' => CategoryResource::make($category)->withDetail()]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Category $category)
     {
-        $category = Category::find($id);
-        if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
         $category->delete();
-
         return response()->json(['message' => 'Category deleted successfully']);
     }
-        public function showSoftDeleted()
+    /**
+     * show data deleted.
+     */
+    public function showSoftDeleted()
     {
         $deletedCategories = Category::onlyTrashed()->get();
         return response()->json($deletedCategories);
     }
-    public function restore($id)
-    {
-        $category = Category::withTrashed()->find($id);
-        if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
-        $category->restore();
+    /**
+     * restore the data.
+     */
 
-        return response()->json(['message' => 'Category succesfully restored.']);
-    }
+     public function restore(Category $category)
+     {
+         $category->restore();
+         return response()->json(['message' => 'Category successfully restored.']);
+     }
 
 }

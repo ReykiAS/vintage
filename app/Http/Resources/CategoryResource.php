@@ -17,27 +17,9 @@ class CategoryResource extends JsonResource
         $data = [
             'id' => $this->id,
             'name' => $this->name,
+            'Image' => $this->image ? $this->image->url : null,
         ];
-        if ($this->isDetail) {
-            $image = $this->image; 
-            if ($image) {
-                $data['image_url'] = $image->url;
-            } else {
-                $data['image_url'] = null;
-            }
-        }
-
         return $data;
-    }
 
-    public function withDetail()
-    {
-        $this->resource->isDetail = true;
-        return $this;
-    }
-
-    public function with($request)
-    {
-        return parent::with($request);
     }
 }

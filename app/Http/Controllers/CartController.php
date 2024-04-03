@@ -7,8 +7,6 @@ use App\Http\Resources\CartResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Cart;
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class CartController extends Controller
 {
@@ -71,7 +69,6 @@ class CartController extends Controller
             return response()->json(['error' => 'Insufficient stock available'], 400);
         }
 
-        // Retrieve product details (assuming a relationship between Cart and Product)
         $cart = Cart::findOrFail($id);
 
         if (!$cart) {

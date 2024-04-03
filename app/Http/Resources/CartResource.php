@@ -14,11 +14,13 @@ class CartResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+    
         $data = [
             'id' => $this->id,
-            'fullname' => $this->user->fullname, 
-            'product' => new ProductResource($this->product), 
+            'fullname' => $this->user->fullname,
+            'product' => new ProductResource($this->product),
             'qty' => $this->qty,
+            'item_price' => $this->calculateItemPrice(), // Call the new method
         ];
 
         if ($this->relationLoaded('product')) {
@@ -27,6 +29,15 @@ class CartResource extends JsonResource
         }    
 
         return $data;
+    }
+
+    private function calculateItemPrice(): float
+    {
+        if ($this->product->discount != 0) {
+            return $this->product->getDiscountedPriceAttribute() * $this->qty;
+        } else {
+            return $this->product->price * $this->qty;
+        }
     }
 
     public function with($request)
