@@ -3,23 +3,25 @@ namespace App\Traits;
 
 trait Searchable
 {
-    public function scopeSearch($query, $search)
+     public function scopeFilter($query, $request)
     {
-        return $query->where('name', 'like', '%' . $search . '%');
-    }
+        if ($request->has('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
 
-    public function scopeFilterByBrand($query, $brandId)
-    {
-        return $query->where('brand_id', $brandId);
-    }
+        if ($request->has('brand')) {
+            $query->where('brand_id', $request->brand);
+        }
 
-    public function scopeFilterByPriceRange($query, $minPrice, $maxPrice)
-    {
-        return $query->whereBetween('price', [$minPrice, $maxPrice]);
-    }
+        if ($request->has('min_price') && $request->has('max_price')) {
+            $query->whereBetween('price', [$request->min_price, $request->max_price]);
+        }
 
-    public function scopeSortBy($query, $sortBy, $sortOrder = 'asc')
-    {
-        return $query->orderBy($sortBy, $sortOrder);
+        if ($request->has('sort_by')) {
+            $sortOrder = $request->has('sort_order') ? $request->sort_order : 'asc';
+            $query->orderBy($request->sort_by, $sortOrder);
+        }
+
+        return $query;
     }
 }
