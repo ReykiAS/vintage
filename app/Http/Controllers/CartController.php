@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CartRequest;
 use App\Http\Resources\CartResource;
+use App\Http\Resources\ProductResource;
 use App\Models\Cart;
 use App\Models\Product;
 
@@ -84,7 +85,7 @@ class CartController extends Controller
      */
     public function destroy(string $id)
     {
-        $cart = Cart::find($id);
+        $cart = Cart::findOrFail($id);
         if (!$cart) {
             return response()->json(['message' => 'Cart not found'], 404);
         }
