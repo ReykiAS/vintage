@@ -39,13 +39,10 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        $category = Category::with('image')->find($id);
+        $category = Category::findOrFail($id);
+        $category->loadMissing('image');
+        return new CategoryResource($category);
 
-        if ($category) {
-            return CategoryResource::make($category)->withDetail();
-        } else {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
     }
 
     /**
