@@ -8,6 +8,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OrderDetailController;
 use App\Models\Category;
 
 /*
@@ -33,10 +34,10 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function() {
         Route::post('/logout', [UserController::class, 'logout']);
 
-        // Product 
+        // Product
         Route::apiResource('products', ProductController::class)->except(['index', 'show']);
         Route::put('/products/{id}/restore', [ProductController::class, 'restore']);
-        Route::get('/products/deleted/trash', [ProductController::class, 'showSoftDeleted']); 
+        Route::get('/products/deleted/trash', [ProductController::class, 'showSoftDeleted']);
 
         // Categories
         Route::put('/categories/{id}/restore', [CategoryController::class, 'restore']);
@@ -50,7 +51,9 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/brands/deleted/trash', [BrandController::class, 'showSoftDeleted']);
         Route::apiResource('brands', BrandController::class)->except(['store', 'show', 'update', 'destroy']);
-        
+
+        Route::post('/order-details', [OrderDetailController::class, 'store']);
+
         // Favorite
         Route::apiResource('/favorites', FavoriteController::class);
 

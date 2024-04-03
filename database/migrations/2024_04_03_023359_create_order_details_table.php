@@ -13,15 +13,16 @@ return new class extends Migration
     {
         Schema::create('order_details', function (Blueprint $table) {
             $table->id();
-            $table->string('adress');
+            $table->string('address');
             $table->string('delivery_details');
             $table->string('payment_details');
+            $table->integer('qty');
             $table->decimal('protection_fee',8,2);
             $table->decimal('shipping_fee',8,2);
             $table->decimal('total_price',8,2);
             $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products');
-            $table->unsignedBigInteger('cart_id');
+            $table->unsignedBigInteger('cart_id')->nullable();
             $table->foreign('cart_id')->references('id')->on('carts');
             $table->unsignedBigInteger('order_id');
             $table->foreign('order_id')->references('id')->on('orders');
