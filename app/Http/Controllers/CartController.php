@@ -7,8 +7,6 @@ use App\Http\Resources\CartResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Cart;
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class CartController extends Controller
 {
@@ -37,16 +35,27 @@ class CartController extends Controller
         // Retrieve product details (assuming a relationship between Cart and Product)
         $product = Product::findOrFail($validated['product_id']);
 
-        // Check available quantity
-        if ($product->qty < $validated['qty']) {
-            return response()->json(['error' => 'Insufficient stock available'], 400);
+        // Check if product already exists in user's cart (assuming a user_id in the cart)
+        $existingCartItem = Cart::where('user_id', $request->user()->id)
+                                ->where('product_id', $validated['product_id'])
+                                ->first();
+
+        if ($existingCartItem) {
+            // Update quantity for existing item
+            $existingCartItem->qty += $validated['qty']; 
+            if ($product->qty < $existingCartItem->qty) {
+                return response()->json(['error' => 'Insufficient stock available'], 400);
+            }
+            $existingCartItem->save();
+            $message = 'Cart item quantity updated.';
+        } else {
+            // Create a new cart item
+            $cart = Cart::create($validated);
+            $message = 'Cart item added successfully.';
         }
 
-        // Create cart item only if stock is sufficient
-        $cart = Cart::create($validated);
-
-        return response()->json(['message' => 'Cart added successfully'], 201);
-        }
+        return response()->json(['message' => $message], 201);
+    }
 
     /**
      * Display the specified resource.
@@ -71,7 +80,6 @@ class CartController extends Controller
             return response()->json(['error' => 'Insufficient stock available'], 400);
         }
 
-        // Retrieve product details (assuming a relationship between Cart and Product)
         $cart = Cart::findOrFail($id);
 
         if (!$cart) {
