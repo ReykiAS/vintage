@@ -8,4 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Variant extends Model
 {
     use HasFactory;
+    protected $fillable = ['size', 'quality'];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

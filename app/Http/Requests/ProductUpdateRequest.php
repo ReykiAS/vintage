@@ -32,6 +32,8 @@ class ProductUpdateRequest extends FormRequest
             'brand_id' => 'required|exists:brands,id',
             'category_id' => 'required|exists:categories,id',
             'user_id' => 'required|exists:users,id',
+            'variants.*.size' => 'required|string',
+            'variants.*.quality' => 'required|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5048',
         ];
     }

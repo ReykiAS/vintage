@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Variant;
 use Illuminate\Http\Request;
 use App\Http\Resources\ProductResource;
 use App\Http\Requests\ProductStoreRequest;
@@ -16,6 +17,9 @@ class ProductController extends Controller
     {
         $products = Product::with('category', 'brand', 'images', 'user');
 
+        if ($request->has('withVariant')) {
+            $products->with('variants');
+        }
 
         if ($request->has('search')) {
             $products = $products->where('name', 'like', '%' . $request->search . '%');
@@ -38,7 +42,7 @@ class ProductController extends Controller
         }
 
         // pagination mechanism
-        $products = $products->paginate(10);
+        $products = $products->paginate(20);
 
        return ProductResource::collection($products);
     }
@@ -54,6 +58,14 @@ class ProductController extends Controller
         if ($request->hasFile('photo')) {
             $photoPath = $request->file('photo')->store('photos');
             $product->addImage($photoPath);
+        }
+        if ($request->has('variants') && is_array($request->variants)) {
+            foreach ($request->variants as $variant) {
+                $product->variants()->create([
+                    'size' => $variant['size'],
+                    'quality' => $variant['quality'],
+                ]);
+            }
         }
 
         return response()->json(['message' => 'Product created successfully'], 201);
@@ -86,6 +98,25 @@ class ProductController extends Controller
         }
         $product->update($validated);
         $product->updateImage($request);
+        if ($request->has('variants')) {
+            foreach ($request->variants as $variantData) {
+                if (isset($variantData['id'])) {
+                    $variant = Variant::find($variantData['id']);
+
+                    if ($variant && $variant->product_id === $product->id) {
+                        $variant->update([
+                            'size' => $variantData['size'],
+                            'quality' => $variantData['quality'],
+                        ]);
+                    }
+                } else {
+                    $product->variants()->create([
+                        'size' => $variantData['size'],
+                        'quality' => $variantData['quality'],
+                    ]);
+                }
+            }
+        }
 
         return response()->json(['message' => 'Product succesfully updated', 'product' => ProductResource::make($product)->withDetail()]);
     }
