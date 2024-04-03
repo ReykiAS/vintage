@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users');
             $table->unsignedBigInteger('cart_id');
             $table->foreign('cart_id')->references('id')->on('carts');
+            $table->unsignedBigInteger('order_id');
+            $table->foreign('order_id')->references('id')->on('orders');
             $table->timestamps();
         });
     }
