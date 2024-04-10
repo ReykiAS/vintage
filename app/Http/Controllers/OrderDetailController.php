@@ -21,57 +21,62 @@ class OrderDetailController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        // Validate incoming request data
-        $validatedData = $request->validate([
-            'product_id' => 'required|integer',
-            'cart_id' => 'required|integer',
-            'address' => 'required|string',
-            'delivery_details' => 'nullable|string',
-            'payment_details' => 'nullable|string',
-            'shipping_fee' => 'required|integer',
-            'protection_fee' => 'required|numeric',
+{
+    $validatedData = $request->validate([
+        'product_id' => 'required_if:cart_id,null|integer',
+        'cart_id' => 'nullable|integer',
+        'address' => 'required|string',
+        'delivery_details' => 'nullable|string',
+        'payment_details' => 'nullable|string',
+        'shipping_fee' => 'required|integer',
+        'protection_fee' => 'required|numeric',
+    ]);
+
+    $product = null;
+    $qty = 1;
+
+    // Check if cart_id exists
+    if ($validatedData['cart_id'] !== null) {
+        $cartItem = $request->user()->carts()->find($validatedData['cart_id']);
+        if ($cartItem) {
+            $product = $cartItem->product;
+            $validatedData['product_id'] = $product->id; // Set product_id from the cart
+            $qty = $cartItem->qty;
+        }
+    } elseif ($validatedData['product_id'] !== null) {
+        $product = Product::findOrFail($validatedData['product_id']);
+    }
+
+    if ($product) {
+        $totalPrice = ($product->price * $qty);
+        $order = Order::create([
+            'user_id' => $request->user()->id,
+            'status' => 'Onprocess',
+            'total' => $totalPrice + $validatedData['shipping_fee'] + $validatedData['protection_fee'],
         ]);
 
-        // Get product quantity based on cart items or default to 1
-        $qty = $this->getQuantityFromCart($request->user(), $validatedData['product_id']);
-
-        // Retrieve product
-        $product = Product::findOrFail($validatedData['product_id']);
-
-        // Calculate order total
-        $orderTotal = ($product->price * $qty) + $validatedData['shipping_fee'] + $validatedData['protection_fee'];
-
-        // Create a new OrderDetail instance
-        $orderDetailData = array_merge($validatedData, ['total' => $orderTotal, 'qty' => $qty]);
+        $orderDetailData = array_merge($validatedData, [
+            'price' => $product->price,
+            'qty' => $qty,
+            'order_id' => $order->id,
+        ]);
         $orderDetail = OrderDetail::create($orderDetailData);
 
-        // Update product stock
-        $product->qty -= $qty;
-        $product->save();
-
-        // Update the status of the corresponding order
-        $orderId = $orderDetail->order_id;
-        $order = Order::findOrFail($orderId);
-        $order->status = 'processing'; // You can set the initial status as per your requirements
-        $order->save();
-
-        // Redirect to WhatsApp API
-        $whatsappApiUrl = 'https://api.whatsapp.com/send?phone=1234567890&text=Hello,%20I%20want%20to%20pay%20for%20my%20order';
-        return redirect()->away($whatsappApiUrl);
-    }
-
-    protected function getQuantityFromCart($user, $productId)
-    {
-        if ($user->Carts()->exists()) {
-            $cartItem = $user->Carts()->where('product_id', $productId)->first();
-            if ($cartItem) {
-                return $cartItem->qty;
-            }
+        if ($validatedData['cart_id'] !== null) {
+            $product->qty -= $qty;
+            $product->save();
+            $cartItem->delete();
         }
-        return 1;
+        elseif($validatedData['cart_id'] === null) {
+            $product->qty -= 1;
+            $product->save();
+        }
     }
 
+    // Redirect to WhatsApp API
+    $whatsappApiUrl = 'https://api.whatsapp.com/send?phone=1234567890&text=Hello,%20I%20want%20to%20pay%20for%20my%20order';
+    return redirect()->away($whatsappApiUrl);
+}
 
 
 
