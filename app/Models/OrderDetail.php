@@ -13,7 +13,7 @@ class OrderDetail extends Model
         'shipping_fee',
         'qty',
         'protection_fee',
-        'total_price',
+        'price',
         'order_id',
         'product_id',
         'cart_id',
