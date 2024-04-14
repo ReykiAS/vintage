@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\OrderDetail;
 use App\Models\Order;
-use App\Models\CartItem;
+use App\Models\Cart;
 use Illuminate\Http\Request;
+use App\Http\Requests\OrderDetailStoreRequest;
 
 class OrderDetailController extends Controller
 {
@@ -20,56 +21,53 @@ class OrderDetailController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(OrderDetailStoreRequest $request)
 {
-    $validatedData = $request->validate([
-        'product_id' => 'required_if:cart_id,null|integer',
-        'cart_id' => 'nullable|integer',
-        'address' => 'required|string',
-        'delivery_details' => 'nullable|string',
-        'payment_details' => 'nullable|string',
-        'shipping_fee' => 'required|integer',
-        'protection_fee' => 'required|numeric',
-    ]);
+    $validatedData = $request->validated();
 
-    $product = null;
-    $qty = 1;
-
-    // Check if cart_id exists
-    if ($validatedData['cart_id'] !== null) {
-        $cartItem = $request->user()->carts()->find($validatedData['cart_id']);
+    // Mengambil product_id dan qty dari Cart jika cart_id tersedia
+    if ($request->filled('cart_id')) {
+        $cartItem = Cart::find($validatedData['cart_id']);
         if ($cartItem) {
             $product = $cartItem->product;
-            $validatedData['product_id'] = $product->id; // Set product_id from the cart
             $qty = $cartItem->qty;
         }
-    } elseif ($validatedData['product_id'] !== null) {
+    } else {
+        // Mengambil product_id dan qty dari permintaan langsung jika tidak ada cart_id
         $product = Product::findOrFail($validatedData['product_id']);
+        $qty = $validatedData['qty'] ?? 1;
     }
 
+    // Lanjutkan dengan menyimpan data jika product tersedia
     if ($product) {
-        $totalPrice = ($product->price * $qty);
+        // Kurangi stok product
+        $product->qty -= $qty;
+        $product->save();
+
+        // Buat order baru
         $order = Order::create([
             'user_id' => $request->user()->id,
             'status' => 'Onprocess',
-            'total' => $totalPrice + $validatedData['shipping_fee'] + $validatedData['protection_fee'],
+            'total' => ($product->price * $qty) + $validatedData['shipping_fee'] + $validatedData['protection_fee'],
         ]);
 
-        $orderDetailData = array_merge($validatedData, [
-            'price' => $product->price,
+        // Buat detail order
+        $orderDetailData = [
+            'product_id' => $product->id,
+            'address' => $validatedData['address'],
             'qty' => $qty,
+            'delivery_details' => $validatedData['delivery_details'],
+            'payment_details' => $validatedData['payment_details'],
+            'price' => $product->price,
             'order_id' => $order->id,
-        ]);
-        $orderDetail = OrderDetail::create($orderDetailData);
+            'shipping_fee' => $validatedData['shipping_fee'],
+            'protection_fee' => $validatedData['protection_fee'],
+        ];
+        OrderDetail::create($orderDetailData);
 
-        if ($validatedData['cart_id'] !== null) {
-            $product->qty -= $qty;
-            $product->save();
+        // Hapus item dari cart jika dipesan dari cart
+        if ($request->filled('cart_id')) {
             $cartItem->delete();
-        }
-        elseif($validatedData['cart_id'] === null) {
-            $product->qty -= 1;
-            $product->save();
         }
     }
 
@@ -77,6 +75,10 @@ class OrderDetailController extends Controller
     $whatsappApiUrl = 'https://api.whatsapp.com/send?phone=1234567890&text=Hello,%20I%20want%20to%20pay%20for%20my%20order';
     return redirect()->away($whatsappApiUrl);
 }
+
+
+
+
 
 
 
