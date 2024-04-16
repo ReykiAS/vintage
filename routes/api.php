@@ -9,6 +9,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderDetailController;
+use App\Http\Controllers\RatingController;
 use App\Models\Category;
 
 /*
@@ -58,6 +59,9 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/favorites', FavoriteController::class);
 
         Route::apiResource('/carts', CartController::class);
+
+        // Rating
+        Route::apiResource('/ratings', RatingController::class);
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

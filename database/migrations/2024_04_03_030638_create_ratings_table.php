@@ -19,8 +19,8 @@ return new class extends Migration
             $table->integer('rating')->unsigned();
             $table->text('comment')->nullable();
 
-            $table->unsignedBigInteger('order_id');
-            $table->foreign('order_id')->references('id')->on('orders');
+            $table->unsignedBigInteger('order_detail_id');
+            $table->foreign('order_detail_id')->references('id')->on('order_details');
             $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products');
             $table->unsignedBigInteger('user_id');
