@@ -33,4 +33,9 @@ class OrderDetail extends Model
     {
         return $this->belongsTo(Cart::class);
     }
+
+    public function rating()
+    {
+        return $this->hasOne(Rating::class);
+    }
 }
