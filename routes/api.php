@@ -58,6 +58,8 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/favorites', FavoriteController::class);
 
         Route::apiResource('/carts', CartController::class);
+
+        Route::post('/payment/notification', [OrderDetailController::class, 'handlePaymentNotification']);
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

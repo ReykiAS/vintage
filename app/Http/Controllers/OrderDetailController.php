@@ -1,94 +1,165 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Product;
 use App\Models\OrderDetail;
 use App\Models\Order;
-use App\Models\Cart;
+use App\Traits\RajaOngkirTrait;
+use App\Traits\MidtransTrait;
 use Illuminate\Http\Request;
-use App\Http\Requests\OrderDetailStoreRequest;
+use Midtrans\Transaction;
+use Midtrans\Config;
+use Illuminate\Support\Facades\Log;
 
 class OrderDetailController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
+    use RajaOngkirTrait, MidtransTrait;
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(OrderDetailStoreRequest $request)
-{
-    $validatedData = $request->validated();
-
-    // Mengambil product_id dan qty dari Cart jika cart_id tersedia
-    if ($request->filled('cart_id')) {
-        $cartItem = Cart::find($validatedData['cart_id']);
-        if ($cartItem) {
-            $product = $cartItem->product;
-            $qty = $cartItem->qty;
-        }
-    } else {
-        // Mengambil product_id dan qty dari permintaan langsung jika tidak ada cart_id
-        $product = Product::findOrFail($validatedData['product_id']);
-        $qty = $validatedData['qty'] ?? 1;
-    }
-
-    // Lanjutkan dengan menyimpan data jika product tersedia
-    if ($product) {
-        // Kurangi stok product
-        $product->qty -= $qty;
-        $product->save();
-
-        // Buat order baru
-        $order = Order::create([
-            'user_id' => $request->user()->id,
-            'status' => 'Onprocess',
-            'total' => ($product->price * $qty) + $validatedData['shipping_fee'] + $validatedData['protection_fee'],
+    public function store(Request $request)
+    {
+        $validatedData = $request->validate([
+            'product_id' => 'required_if:cart_id,null|integer',
+            'cart_id' => 'nullable|integer',
+            'address' => 'required|string',
+            'delivery_details' => 'nullable|string',
+            'payment_details' => 'nullable|string',
+            'protection_fee' => 'required|numeric',
+            'origin' => 'required|numeric',
+            'destination' => 'required|numeric',
+            'weight' => 'required|numeric',
+            'courier' => 'required|string'
         ]);
 
-        // Buat detail order
-        $orderDetailData = [
-            'product_id' => $product->id,
-            'address' => $validatedData['address'],
-            'qty' => $qty,
-            'delivery_details' => $validatedData['delivery_details'],
-            'payment_details' => $validatedData['payment_details'],
-            'price' => $product->price,
-            'order_id' => $order->id,
-            'shipping_fee' => $validatedData['shipping_fee'],
-            'protection_fee' => $validatedData['protection_fee'],
-        ];
-        OrderDetail::create($orderDetailData);
+        $product = null;
+        $qty = 1;
 
-        // Hapus item dari cart jika dipesan dari cart
-        if ($request->filled('cart_id')) {
-            $cartItem->delete();
+        // Check if cart_id exists
+        if ($validatedData['cart_id'] !== null) {
+            $cartItem = $request->user()->carts()->find($validatedData['cart_id']);
+            if ($cartItem) {
+                $product = $cartItem->product;
+                $validatedData['product_id'] = $product->id; // Set product_id from the cart
+                $qty = $cartItem->qty;
+            }
+        } elseif ($validatedData['product_id'] !== null) {
+            $product = Product::findOrFail($validatedData['product_id']);
+        }
+
+        if ($product) {
+            $totalPrice = ($product->price * $qty);
+
+            $shippingCost = $this->getShippingCost(
+                $validatedData['origin'],
+                $validatedData['destination'],
+                $validatedData['weight'],
+                $validatedData['courier']
+            );
+
+            if ($shippingCost === null) {
+                return response()->json(['message' => 'Failed to get shipping cost'], 500);
+            }
+
+            $total = $totalPrice + $shippingCost + $validatedData['protection_fee'];
+
+            $order = Order::create([
+                'user_id' => $request->user()->id,
+                'status' => 'new', // Change status to 'Pending' before payment
+                'total' => $total,
+            ]);
+
+            $orderDetailData = array_merge($validatedData, [
+                'price' => $product->price,
+                'qty' => $qty,
+                'order_id' => $order->id,
+                'shipping_fee' => $shippingCost,
+            ]);
+            $orderDetail = OrderDetail::create($orderDetailData);
+            $this->initializeMidtrans();
+
+            // Prepare transaction details for Midtrans
+            $transaction_details = [
+                'order_id' => $order->id,
+                'gross_amount' => $total,
+            ];
+
+            $transaction = [
+                'transaction_details' => $transaction_details,
+            ];
+
+            try {
+                // Define transaction parameters
+                $params = array(
+                    'transaction_details' => array(
+                        'order_id' => $order->id, // Use your order ID here
+                        'gross_amount' => $total,
+                    ),
+                    'customer_details' => array(
+                        'first_name' => $request->user()->name,
+                        'email' => $request->user()->email,
+                    ),
+                );
+
+                // Get Snap Token from Midtrans
+                $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+                // Log Snap Token Response
+                if (!empty($snapToken)) {
+                    Log::info('Snap Token Response: ', ['snapToken' => $snapToken]);
+                }
+
+                // Update order status and save Snap Token
+                $order->snap_token = $snapToken;
+                $order->save();
+
+                // Return Snap Token to frontend
+                return response()->json(['snapToken' => $snapToken, 'redirectUrl' => "https://app.midtrans.com/snap/v1/transactions/$snapToken"]);
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
         }
     }
+    public function handlePaymentNotification(Request $request)
+    {
+        $transactionStatus = $request->input('transaction_status');
+        $orderId = $request->input('order_id');
+        $fraudStatus = $request->input('fraud_status');
 
-    // Redirect to WhatsApp API
-    $whatsappApiUrl = 'https://api.whatsapp.com/send?phone=1234567890&text=Hello,%20I%20want%20to%20pay%20for%20my%20order';
-    return redirect()->away($whatsappApiUrl);
-}
+        // Retrieve the order from the database
+        $order = Order::where('id', $orderId)->first();
 
+        if ($order) {
+            // Update order status based on transaction status and fraud status
+            if ($transactionStatus == 'capture') {
+                if ($fraudStatus == 'challenge') {
+                    // Handle fraud challenge
+                } else if ($fraudStatus == 'accept') {
+                    // Handle fraud accept
+                }
+                $order->status = 'Onprocess';
+            } else if ($transactionStatus == 'settlement') {
+                $order->status = 'Onprocess';
+            } else if ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
+                $order->status = 'Failed';
+            } else if ($transactionStatus == 'pending') {
+                $order->status = 'Pending';
+            }
 
+            $order->save();
+        }
 
-
-
-
-
+        return response()->json(['message' => 'Payment notification received']);
+    }
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        //
+        // TODO: Implement show method to display order details
     }
 
     /**
@@ -96,7 +167,7 @@ class OrderDetailController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        // TODO: Implement update method to handle payment status/callback from Midtrans
     }
 
     /**
@@ -104,6 +175,6 @@ class OrderDetailController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        // TODO: Implement destroy method to handle order cancellation
     }
 }
