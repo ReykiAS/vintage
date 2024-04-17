@@ -64,8 +64,6 @@ Route::prefix('v1')->group(function () {
         // Rating
         Route::apiResource('/ratings', RatingController::class);
 
-        Route::post('/payment/notification', [OrderDetailController::class, 'handlePaymentNotification']);
-
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

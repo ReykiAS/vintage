@@ -114,9 +114,12 @@ class OrderDetailController extends Controller
                 // Update order status and save Snap Token
                 $order->snap_token = $snapToken;
                 $order->save();
+                $redirectUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
 
-                // Return Snap Token to frontend
-                return response()->json(['snapToken' => $snapToken, 'redirectUrl' => "https://app.midtrans.com/snap/v1/transactions/$snapToken"]);
+                return response()->json([
+                    'snapToken' => $snapToken,
+                    'redirectUrl' => $redirectUrl
+                ]);
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 500);
             }

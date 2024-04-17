@@ -25,7 +25,6 @@ trait RajaOngkirTrait
                     'courier' => $courier
                 ]
             ]);
-
             $body = $response->getBody();
             $data = json_decode($body, true);
 
