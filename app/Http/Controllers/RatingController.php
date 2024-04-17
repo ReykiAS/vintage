@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RatingStoreRequest;
+use App\Http\Resources\RatingResource;
 use App\Models\Rating;
 use Illuminate\Http\Request;
 
@@ -11,9 +12,10 @@ class RatingController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Rating $ratings)
     {
-        //
+        $ratings = Rating::with('user', 'product', 'order')->get();
+        return RatingResource::collection($ratings);
     }
 
     /**
