@@ -136,59 +136,55 @@ class OrderDetailController extends Controller
         }
     }
 
-
-
     public function handlePaymentNotification(Request $request)
-    {
-        $transactionStatus = $request->input('transaction_status');
-        $orderId = $request->input('order_id');
-        $fraudStatus = $request->input('fraud_status');
+{
+    $transactionStatus = $request->input('transaction_status');
+    $orderId = $request->input('order_id');
+    $fraudStatus = $request->input('fraud_status');
 
-        // Retrieve the order from the database
-        $order = Order::where('id', $orderId)->first();
+    // Retrieve the order from the database
+    $order = Order::where('id', $orderId)->first();
 
-        if ($order) {
-            // Update order status based on transaction status and fraud status
-            if ($transactionStatus == 'capture') {
-                if ($fraudStatus == 'challenge') {
-                    // Handle fraud challenge
-                } else if ($fraudStatus == 'accept') {
-                    // Handle fraud accept
-                }
-                $order->status = 'Onprocess';
-                $order->save();
+    if ($order) {
+        // Update order status based on transaction status and fraud status
+        if ($transactionStatus == 'capture') {
+            if ($fraudStatus == 'challenge') {
+                // Handle fraud challenge
+            } elseif ($fraudStatus == 'accept') {
+                // Handle fraud accept
 
-                // Handle product quantity deduction
-                $orderDetails = $order->orderDetails;
-                foreach ($orderDetails as $orderDetail) {
-                    $product = Product::find($orderDetail->product_id);
-                    if ($product) {
-                        if ($orderDetail->cart_id !== null) {
-                            // If ordered from cart, delete the cart item
-                            $cartItem = $request->user()->carts()->find($orderDetail->cart_id);
-                            if ($cartItem) {
-                                $cartItem->delete();
-                            }
-                        }
-                        // Decrease product quantity
-                        $product->quantity -= $orderDetail->qty;
-                        $product->save();
+                // Handle if the order is from cart
+                if ($order->cart_id !== null) {
+                    $cartItem = $order->user->carts()->find($order->cart_id);
+                    if ($cartItem) {
+                        $cartItem->delete(); // Remove item from cart
                     }
                 }
-            } else if ($transactionStatus == 'settlement') {
-                $order->status = 'Onprocess';
-                $order->save();
-            } else if ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
-                $order->status = 'Failed';
-                $order->save();
-            } else if ($transactionStatus == 'pending') {
-                $order->status = 'Pending';
-                $order->save();
+
+                // Handle reducing product quantity
+                foreach ($order->orderDetails as $orderDetail) {
+                    $product = Product::find($orderDetail->product_id);
+                    if ($product) {
+                        $product->decrement('quantity', $orderDetail->qty); // Decrease product quantity
+                    }
+                }
             }
+            $order->status = 'Onprocess';
+        } elseif ($transactionStatus == 'settlement') {
+
+            $order->status = 'Onprocess';
+        } elseif ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
+            $order->status = 'Failed';
+        } elseif ($transactionStatus == 'pending') {
+            $order->status = 'Pending';
         }
 
-        return response()->json(['message' => 'Payment notification received']);
+        $order->save();
     }
+
+    return response()->json(['message' => 'Payment notification received']);
+}
+
 
 
     /**
