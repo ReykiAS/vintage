@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->string('snap_token')->nullable()->after('total'); // Add snap_token column
+            $table->string('snap_token')->nullable()->after('order'); // Add snap_token column
         });
     }
 

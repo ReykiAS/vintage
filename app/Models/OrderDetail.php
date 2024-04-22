@@ -13,8 +13,11 @@ class OrderDetail extends Model
         'qty',
         'weight',
         'protection_fee',
-        'price',
+        'total',
         'product_id',
+        'origin',
+        'destination',
+        'courier',
         'cart_id',
     ];
 

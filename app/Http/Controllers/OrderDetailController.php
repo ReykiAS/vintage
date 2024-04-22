@@ -67,27 +67,30 @@ class OrderDetailController extends Controller
 
         $total = $totalPrice + $shippingCost + $validatedData['protection_fee'];
 
-        $order = Order::create([
-            'user_id' => $request->user()->id,
-            'status' => 'new',
-            'total' => $total,
-        ]);
+
 
         $orderDetailData = [
             'product_id' => $validatedData['product_id'],
             'delivery_details' => $validatedData['delivery_details'],
             'protection_fee' => $validatedData['protection_fee'],
             'weight' => $validatedData['weight'],
-            'price' => $product->price,
+            'total' => $total,
             'qty' => $qty,
             'shipping_fee' => $shippingCost,
             'origin' => $validatedData['origin'],
             'destination' => $validatedData['destination'],
             'courier' => $validatedData['courier'],
-            'order_id' => $order->id
         ];
 
         $orderDetail = OrderDetail::create($orderDetailData);
+        $order = Order::create([
+            'user_id' => $request->user()->id,
+            'status' => 'new',
+            'product_id' => $validatedData['product_id'],
+            'order' => $product->price,
+            'qty' => $qty,
+            'order_detail_id' => $orderDetail->id,
+        ]);
             $this->initializeMidtrans();
 
             // Prepare transaction details for Midtrans
@@ -147,35 +150,21 @@ class OrderDetailController extends Controller
 
     if ($order) {
         // Update order status based on transaction status and fraud status
-        if ($transactionStatus == 'capture') {
-            if ($fraudStatus == 'challenge') {
-                // Handle fraud challenge
-            } elseif ($fraudStatus == 'accept') {
-                // Handle fraud accept
-
-                // Handle if the order is from cart
-                if ($order->cart_id !== null) {
-                    $cartItem = $order->user->carts()->find($order->cart_id);
-                    if ($cartItem) {
-                        $cartItem->delete(); // Remove item from cart
-                    }
-                }
-
-                // Handle reducing product quantity
-                foreach ($order->orderDetails as $orderDetail) {
-                    $product = Product::find($orderDetail->product_id);
-                    if ($product) {
-                        $product->decrement('quantity', $orderDetail->qty); // Decrease product quantity
-                    }
-                }
+        if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
+            // Kurangi stok produk
+            $product = Product::find($order->product_id);
+            if ($product) {
+                $product->qty -= $order->qty;
+                $product->save();
             }
-            $order->status = 'Onprocess';
-        } elseif ($transactionStatus == 'settlement') {
+
+            // Hapus cart_id
+
 
             $order->status = 'Onprocess';
-        } elseif ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
+        } else if ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
             $order->status = 'Failed';
-        } elseif ($transactionStatus == 'pending') {
+        } else if ($transactionStatus == 'pending') {
             $order->status = 'Pending';
         }
 
