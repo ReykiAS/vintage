@@ -61,6 +61,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/carts', CartController::class);
 
         Route::post('/payment/notification', [OrderDetailController::class, 'handlePaymentNotification']);
+        Route::post('/orders/{order_id}/update-shipping-status', [OrderDetailController::class, 'updateShippingStatus']);
         
         // Rating
         Route::apiResource('/ratings', RatingController::class);

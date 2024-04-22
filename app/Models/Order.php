@@ -19,6 +19,7 @@ class Order extends Model
         'product_id',
         'qty',
         'order',
+        'tracking_number',
         'cart_id',
     ];
 
@@ -30,4 +31,26 @@ class Order extends Model
     protected $casts = [
         'status' => ProductStatusEnum::class,
     ];
+
+    public function updateShippingStatus(Request $request, $orderId)
+    {
+        $request->validate([
+            'tracking_number' => 'required|string|max:255',
+        ]);
+
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        $trackingNumber = $request->input('tracking_number');
+        
+        // Deklarasi status di dalam controller
+        $status = 'shipping';
+
+        $order->updateShippingStatus($trackingNumber, $status);
+
+        return response()->json(['message' => 'Order updated successfully', 'order' => $order]);
+    }
 }

@@ -143,7 +143,7 @@ class OrderDetailController extends Controller
     }
 
     public function handlePaymentNotification(Request $request)
-{
+    {
     $transactionStatus = $request->input('transaction_status');
     $orderId = $request->input('order_id');
     $fraudStatus = $request->input('fraud_status');
@@ -193,7 +193,7 @@ class OrderDetailController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // TODO: Implement update method to handle payment status/callback from Midtrans
+       
     }
 
     /**
@@ -202,5 +202,27 @@ class OrderDetailController extends Controller
     public function destroy(string $id)
     {
         // TODO: Implement destroy method to handle order cancellation
+    }
+
+    public function updateShippingStatus(Request $request, $orderId)
+    {
+        $request->validate([
+            'tracking_number' => 'required|int',
+        ]);
+
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        $trackingNumber = $request->input('tracking_number');
+        
+        // Deklarasi status di dalam controller
+        $status = 'shipping';
+
+        $order->updateShippingStatus($trackingNumber, $status);
+
+        return response()->json(['message' => 'Order updated successfully', 'order' => $order]);
     }
 }
