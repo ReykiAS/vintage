@@ -19,6 +19,7 @@ class Order extends Model
         'product_id',
         'qty',
         'order',
+        'cart_id',
     ];
 
     public function orderDetails()

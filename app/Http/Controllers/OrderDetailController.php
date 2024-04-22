@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Cart;
 use App\Models\OrderDetail;
 use App\Models\Order;
 use App\Traits\RajaOngkirTrait;
@@ -28,9 +29,7 @@ class OrderDetailController extends Controller
             'delivery_details' => 'nullable|string',
             'payment_details' => 'nullable|string',
             'protection_fee' => 'required|numeric',
-            'origin' => 'required|numeric',
             'destination' => 'required|numeric',
-            'weight' => 'required|numeric',
             'courier' => 'required|string'
         ]);
 
@@ -51,36 +50,37 @@ class OrderDetailController extends Controller
         } else {
             return response()->json(['message' => 'Either cart_id or product_id must be provided'], 400);
         }
-    if ($product) {
-        $totalPrice = ($product->price * $qty);
+        if ($product) {
+            $totalPrice = ($product->price * $qty);
 
-        $shippingCost = $this->getShippingCost(
-            $validatedData['origin'],
-            $validatedData['destination'],
-            $validatedData['weight'],
-            $validatedData['courier']
-        );
+            // Ambil weight dari product
+            $weight = $product->weight;
+            $origin = 114;
+            $shippingCost = $this->getShippingCost(
+                $origin,
+                $validatedData['destination'],
+                $weight, // Menggunakan weight dari product
+                $validatedData['courier']
+            );
 
-        if ($shippingCost === null) {
-            return response()->json(['message' => 'Failed to get shipping cost'], 500);
-        }
+            if ($shippingCost === null) {
+                return response()->json(['message' => 'Failed to get shipping cost'], 500);
+            }
 
-        $total = $totalPrice + $shippingCost + $validatedData['protection_fee'];
+            $total = $totalPrice + $shippingCost + $validatedData['protection_fee'];
 
-
-
-        $orderDetailData = [
-            'product_id' => $validatedData['product_id'],
-            'delivery_details' => $validatedData['delivery_details'],
-            'protection_fee' => $validatedData['protection_fee'],
-            'weight' => $validatedData['weight'],
-            'total' => $total,
-            'qty' => $qty,
-            'shipping_fee' => $shippingCost,
-            'origin' => $validatedData['origin'],
-            'destination' => $validatedData['destination'],
-            'courier' => $validatedData['courier'],
-        ];
+            $orderDetailData = [
+                'product_id' => $validatedData['product_id'],
+                'delivery_details' => $validatedData['delivery_details'],
+                'protection_fee' => $validatedData['protection_fee'],
+                'weight' => $weight, // Menggunakan weight dari product
+                'total' => $total,
+                'qty' => $qty,
+                'shipping_fee' => $shippingCost,
+                'origin' => $origin,
+                'destination' => $validatedData['destination'],
+                'courier' => $validatedData['courier'],
+            ];
 
         $orderDetail = OrderDetail::create($orderDetailData);
         $order = Order::create([
@@ -90,12 +90,15 @@ class OrderDetailController extends Controller
             'order' => $product->price,
             'qty' => $qty,
             'order_detail_id' => $orderDetail->id,
+            'cart_id'=> $validatedData['cart_id'],
+
         ]);
+        $order_id = 'ORDER-' . $order->id . '-' . time();
             $this->initializeMidtrans();
 
             // Prepare transaction details for Midtrans
             $transaction_details = [
-                'order_id' => $order->id,
+                'order_id' => $order_id,
                 'gross_amount' => $total,
             ];
 
@@ -157,6 +160,7 @@ class OrderDetailController extends Controller
                 $product->qty -= $order->qty;
                 $product->save();
             }
+            Cart::where('id', $order->cart_id)->delete();
 
             // Hapus cart_id
 
