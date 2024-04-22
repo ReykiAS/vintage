@@ -110,7 +110,7 @@ class OrderDetailController extends Controller
                 // Define transaction parameters
                 $params = array(
                     'transaction_details' => array(
-                        'order_id' => $order->id, // Use your order ID here
+                        'order_id' => $order_id, // Use your order ID here
                         'gross_amount' => $total,
                     ),
                     'customer_details' => array(
