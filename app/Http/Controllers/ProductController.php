@@ -26,6 +26,9 @@ class ProductController extends Controller
     public function store(ProductStoreRequest $request)
     {
         $validated = $request->validated();
+
+        $validated['user_id'] = auth()->id(); // atau auth()->user()->id
+
         $product = Product::create($validated);
 
         if ($request->hasFile('photo')) {
@@ -69,7 +72,8 @@ class ProductController extends Controller
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
-        $product->update($validated);
+        $product->fill($validated)->save();
+
         $product->updateImage($request);
         if ($request->has('variants')) {
             foreach ($request->variants as $variantData) {
