@@ -17,23 +17,24 @@ class ProductResource extends JsonResource
         $originalPrice = (float) $this->price;
         $discountedPrice = (float) $this->discountedPrice;
         $data = [
-            'Id' => $this->id,
-            'Image' => $this->image ? $this->image->url : null, // Tampilkan URL gambar terlebih dahulu
-            'Name' => $this->name,
-            'Price' => $this->price,
+            'id' => $this->id,
+            'image' => $this->image ? $this->image->url : null, // Tampilkan URL gambar terlebih dahulu
+            'name' => $this->name,
+            'price' => $this->price,
             'size' => $this->variants->isNotEmpty() ? $this->variants->pluck('size')->first() : null,
         ];
         if ($discountedPrice !== $originalPrice) {
-            $data['Discounted Price'] = $discountedPrice;
+            $data['discounted_price'] = $discountedPrice;
         }
 
         if ($this->isDetail) {
         $data['quality'] = $this->variants->isNotEmpty() ? $this->variants->pluck('quality')->first() : null;
-        $data['Item Description'] = $this->description;
-        $data['Store Name'] = $this->user->username;
-        $data['Category'] = $this->category->name;
-        $data['Brand'] = $this->brand->name;
-        $data['Uploaded'] = $this->created_at;
+        $data['item_description'] = $this->description;
+        $data['store_name'] = $this->user->username;
+        $data['category'] = $this->category->name;
+        $data['brand'] = $this->brand->name;
+        $data['uploaded'] = $this->created_at;
+        $data['avg_rating'] = (int) $this->getAverageRatingAttribute();
       }
 
         return $data;

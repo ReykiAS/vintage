@@ -17,7 +17,6 @@ class RatingResource extends JsonResource
         $data = [
             'id' => $this->id,
             'rating' => $this->rating,
-            'comment' => $this->comment,
             'username'=> $this->user->username,
             'product' => new ProductResource($this->product),
         ];

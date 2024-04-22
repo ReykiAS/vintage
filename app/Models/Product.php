@@ -51,7 +51,7 @@ class Product extends Model
 
     public function ratings()
     {
-        return $this->hasManyThrough(Rating::class, OrderDetail::class);
+        return $this->hasMany(Rating::class);
     }
 
     public function images()
@@ -69,5 +69,16 @@ class Product extends Model
     public function variants()
     {
         return $this->hasMany(Variant::class);
+    }
+
+    // Accessor method to calculate and return the average rating
+    public function getAverageRatingAttribute()
+    {
+        // Check if ratings exist to avoid division by zero
+        if ($this->ratings->count() > 0) {
+            return $this->ratings->avg('rating');
+        } else {
+            return null; // Or any placeholder value you prefer for products without ratings
+        }
     }
 }

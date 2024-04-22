@@ -17,7 +17,6 @@ return new class extends Migration
 
             // Columns for rating data
             $table->integer('rating')->unsigned();
-            $table->text('comment')->nullable();
 
             $table->unsignedBigInteger('order_detail_id');
             $table->foreign('order_detail_id')->references('id')->on('order_details');
