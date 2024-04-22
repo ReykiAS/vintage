@@ -28,6 +28,7 @@ class ProductFactory extends Factory
             'category_id' => Category::factory(),
             'brand_id' => Brand::factory(),
             'user_id' => User::factory(),
+            'weight'=>fake()->numberBetween(20,1000),
             'discount' => fake()->numberBetween(0,80),
         ];
     }

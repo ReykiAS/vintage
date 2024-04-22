@@ -17,7 +17,6 @@ return new class extends Migration
             $table->integer('qty');
             $table->decimal('order', 10, 2); // Not sure what 'order' column represents, adjust as needed
             // $table->string('address');
-            $table->decimal('total');
             $table->string('status');
             $table->unsignedBigInteger('order_detail_id')->nullable();
             $table->timestamps();

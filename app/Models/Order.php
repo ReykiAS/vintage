@@ -15,10 +15,13 @@ class Order extends Model
         'snap_token',
         'user_id',
         'status',
-        'order_detail_id'
+        'order_detail_id',
+        'product_id',
+        'qty',
+        'order',
     ];
 
-    public function orderDetail() 
+    public function orderDetails()
     {
         return $this->hasMany(OrderDetail::class);
     }

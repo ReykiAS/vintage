@@ -13,8 +13,11 @@ class OrderDetail extends Model
         'qty',
         'weight',
         'protection_fee',
-        'price',
+        'total',
         'product_id',
+        'origin',
+        'destination',
+        'courier',
         'cart_id',
     ];
 
@@ -31,5 +34,9 @@ class OrderDetail extends Model
     public function rating()
     {
         return $this->hasOne(Rating::class);
+    }
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 }

@@ -17,13 +17,13 @@ return new class extends Migration
             $table->decimal('weight');
             $table->decimal('protection_fee');
             $table->decimal('shipping_fee');
-            $table->decimal('price');
+            $table->decimal('total');
             $table->integer('origin');
             $table->integer('destination');
             $table->string('courier');
             $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade'); // Tambahkan onDelete('cascade')
-           
+
             $table->timestamps();
         });
     }
