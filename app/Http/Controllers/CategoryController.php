@@ -76,10 +76,15 @@ class CategoryController extends Controller
      * restore the data.
      */
 
-     public function restore(Category $category)
+     public function restore($id)
      {
-         $category->restore();
-         return response()->json(['message' => 'Category successfully restored.']);
+        $category = Category::withTrashed()->find($id);
+        if (!$category) {
+            return response()->json(['message' => 'Category not found'], 404);
+        }
+        $category->restore();
+
+        return response()->json(['message' => 'Category succesfully restored.']);
      }
 
 }
