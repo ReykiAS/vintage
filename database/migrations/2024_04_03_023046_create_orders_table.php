@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('product_id');
             $table->integer('qty');
-            $table->string('snap_token')->nullable(); // Add snap_token column
             $table->decimal('order', 10, 2); // Not sure what 'order' column represents, adjust as needed
             // $table->string('address');
+            $table->decimal('total');
             $table->string('status');
             $table->unsignedBigInteger('order_detail_id')->nullable();
             $table->timestamps();

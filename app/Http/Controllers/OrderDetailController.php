@@ -35,7 +35,7 @@ class OrderDetailController extends Controller
 
             // Set default origin and protection_fee
             $validatedData['origin'] = 114;
-            $validatedData['protection_fee'] = 10;
+            $validatedData['protection_fee'] = 10000;
 
             // Initialize variables
             $orderDetails = [];
