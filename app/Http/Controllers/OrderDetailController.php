@@ -193,7 +193,7 @@ class OrderDetailController extends Controller
      */
     public function update(Request $request, string $id)
     {
-       
+
     }
 
     /**
@@ -217,12 +217,25 @@ class OrderDetailController extends Controller
         }
 
         $trackingNumber = $request->input('tracking_number');
-        
+
         // Deklarasi status di dalam controller
         $status = 'shipping';
 
         $order->updateShippingStatus($trackingNumber, $status);
 
         return response()->json(['message' => 'Order updated successfully', 'order' => $order]);
+    }
+    public function completePurchase($orderId)
+    {
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        $order->status = 'Done';
+        $order->save();
+
+        return response()->json(['message' => 'Purchase completed successfully', 'order' => $order]);
     }
 }
