@@ -80,7 +80,7 @@ class CartController extends Controller
             return response()->json(['error' => 'Insufficient stock available'], 400);
         }
 
-        $cart = Cart::findOrFail($id);
+        $cart = Cart::find($id);
 
         if (!$cart) {
             return response()->json(['message' => 'Cart not found'], 404);
@@ -96,7 +96,7 @@ class CartController extends Controller
      */
     public function destroy(string $id)
     {
-        $cart = Cart::findOrFail($id);
+        $cart = Cart::find($id);
         if (!$cart) {
             return response()->json(['message' => 'Cart not found'], 404);
         }

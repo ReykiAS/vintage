@@ -41,12 +41,12 @@ class Product extends Model
 
     public function favorite()
     {
-        return $this->belongsTo(Favorite::class);
+        return $this->hasMany(Favorite::class);
     }
 
     public function cart()
     {
-        return $this->belongsTo(Cart::class);
+        return $this->hasMany(Cart::class);
     }
 
     public function ratings()

@@ -74,6 +74,8 @@ class BrandController extends Controller
         if (!$brand) {
             return response()->json(['message' => 'Brand not found'], 404);
         }
+
+        $brand->products()->delete();
         $brand->delete();
 
         return response()->json(['message' => 'Brand deleted successfully']);
@@ -88,6 +90,7 @@ class BrandController extends Controller
         if (!$brand) {
             return response()->json(['message' => 'Brand not found'], 404);
         }
+        $brand->products()->restore();
         $brand->restore();
 
         return response()->json(['message' => 'Brand succesfully restored.']);

@@ -25,7 +25,7 @@ class FavoriteStoreRequest extends FormRequest
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'product_id' => 'required|exists:products,id',
+            'product_id' => 'required|exists:products,id,deleted_at,NULL',
         ];
     }
 

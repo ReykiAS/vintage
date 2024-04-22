@@ -65,6 +65,8 @@ class CategoryController extends Controller
         if (!$category) {
             return response()->json(['message' => 'Category not found'], 404);
         }
+
+        $category->products()->delete();
         $category->delete();
 
         return response()->json(['message' => 'Category deleted successfully']);
@@ -87,6 +89,7 @@ class CategoryController extends Controller
         if (!$category) {
             return response()->json(['message' => 'Category not found'], 404);
         }
+        $category->products()->restore();
         $category->restore();
 
         return response()->json(['message' => 'Category succesfully restored.']);
