@@ -16,6 +16,7 @@ class Product extends Model
         'name',
         'price',
         'qty',
+        'weight',
         'description',
         'discount',
         'brand_id',
@@ -48,10 +49,10 @@ class Product extends Model
         return $this->belongsTo(Cart::class);
     }
 
-    // public function ratings()
-    // {
-    //     return $this->hasManyThrough(Rating::class, OrderDetail::class);
-    // }
+    public function ratings()
+    {
+        return $this->hasManyThrough(Rating::class, OrderDetail::class);
+    }
 
     public function images()
     {

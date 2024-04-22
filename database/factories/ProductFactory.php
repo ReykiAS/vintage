@@ -24,6 +24,7 @@ class ProductFactory extends Factory
             'description' => fake()->text(),
             'price' => fake()->numberBetween(100,10000),
             'qty' => fake()->numberBetween(0,1000),
+            'weight' => fake()->numberBetween(0,1000),
             'category_id' => Category::factory(),
             'brand_id' => Brand::factory(),
             'user_id' => User::factory(),
