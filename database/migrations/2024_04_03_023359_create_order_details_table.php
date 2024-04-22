@@ -12,18 +12,18 @@ return new class extends Migration
     {
         Schema::create('order_details', function (Blueprint $table) {
             $table->id();
-            $table->string('address');
             $table->string('delivery_details');
-            $table->string('payment_details');
             $table->integer('qty');
-            $table->decimal('protection_fee', 8, 2);
-            $table->decimal('shipping_fee', 8, 2);
-            $table->decimal('price', 8, 2);
+            $table->decimal('weight');
+            $table->decimal('protection_fee');
+            $table->decimal('shipping_fee');
+            $table->decimal('price');
+            $table->integer('origin');
+            $table->integer('destination');
+            $table->string('courier');
             $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade'); // Tambahkan onDelete('cascade')
            
-            $table->unsignedBigInteger('order_id');
-            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade'); // Tambahkan onDelete('cascade')
             $table->timestamps();
         });
     }

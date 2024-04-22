@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('qty');
             $table->string('description');
             $table->integer('discount')->nullable();
+            $table->decimal('weight');
             $table->unsignedBigInteger('brand_id');
             $table->unsignedBigInteger('category_id');
             $table->unsignedBigInteger('user_id');

@@ -12,9 +12,16 @@ class Order extends Model
 
     protected $fillable = [
         'total',
+        'snap_token',
         'user_id',
         'status',
+        'order_detail_id'
     ];
+
+    public function orderDetail() 
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
 
     protected $casts = [
         'status' => ProductStatusEnum::class,
