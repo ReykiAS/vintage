@@ -104,9 +104,12 @@ class ProductController extends Controller
     public function destroy(string $id)
     {
         $product = Product::find($id);
+
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
+
+        $product->variants()->delete();
         $product->delete();
 
         return response()->json(['message' => 'Product deleted successfully']);
@@ -124,11 +127,14 @@ class ProductController extends Controller
     public function restore($id)
     {
         $product = Product::withTrashed()->find($id);
+
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
-        $product->restore();
 
-        return response()->json(['message' => 'Product succesfully restored.']);
+        $product->restore();
+        $product->variants()->withTrashed()->restore();
+
+        return response()->json(['message' => 'Product successfully restored']);
     }
 }

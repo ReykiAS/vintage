@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('size');
             $table->string('quality');
             $table->timestamps();
+            $table->softDeletes();
+
         });
     }
 
