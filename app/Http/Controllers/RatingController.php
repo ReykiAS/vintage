@@ -45,9 +45,20 @@ class RatingController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function showProductRatings(string $id)
     {
-        //
+        // Eager load ratings with user and product relationships
+        $ratings = Rating::with('user', 'product')
+            ->where('product_id', $id)
+            ->get();
+
+        // Check if any ratings were found
+        if ($ratings->isEmpty()) {
+            return response()->json(['message' => 'No ratings found for this product'], 204);
+        }
+
+        // Return ratings as a collection resource (assuming you have a RatingResource class)
+        return RatingResource::collection($ratings);
     }
 
     /**

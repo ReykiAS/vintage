@@ -65,6 +65,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/orders/{order_id}/complete-purchase', [OrderDetailController::class, 'completePurchase']);
 
         // Rating
+        Route::get('/ratings/product/{id}', [RatingController::class, 'showProductRatings']);
         Route::apiResource('/ratings', RatingController::class);
 
     });
