@@ -91,10 +91,13 @@ class OrderDetailController extends Controller
             'qty' => $qty,
             'order_detail_id' => $orderDetail->id,
             'cart_id'=> $validatedData['cart_id'],
-
         ]);
+
         $order_id = 'ORDER-' . $order->id . '-' . time();
             $this->initializeMidtrans();
+
+        $order->order_id = $order_id;
+        $product->save();
 
             // Prepare transaction details for Midtrans
             $transaction_details = [
@@ -102,6 +105,7 @@ class OrderDetailController extends Controller
                 'gross_amount' => $total,
             ];
 
+        
             $transaction = [
                 'transaction_details' => $transaction_details,
             ];
@@ -149,7 +153,7 @@ class OrderDetailController extends Controller
     $fraudStatus = $request->input('fraud_status');
 
     // Retrieve the order from the database
-    $order = Order::where('id', $orderId)->first();
+    $order = Order::where('order_id', $orderId)->first();
 
     if ($order) {
         // Update order status based on transaction status and fraud status

@@ -21,6 +21,7 @@ class Order extends Model
         'order',
         'tracking_number',
         'cart_id',
+        'order_id'
     ];
 
     public function orderDetails()
@@ -31,7 +32,7 @@ class Order extends Model
     protected $casts = [
         'status' => ProductStatusEnum::class,
     ];
-
+    
     public function updateShippingStatus($trackingNumber, $status)
     {
         $this->tracking_number = $trackingNumber;
