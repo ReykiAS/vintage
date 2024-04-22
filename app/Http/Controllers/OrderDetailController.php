@@ -21,119 +21,122 @@ class OrderDetailController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            $validatedData = $request->validate([
-                'product_id' => 'required_if:cart_id,null|integer',
-                'cart_id' => 'nullable|integer',
-                'delivery_details' => 'nullable|string',
-                'payment_details' => 'nullable|string',
-                'protection_fee' => 'required|numeric',
-                'origin' => 'required|numeric',
-                'destination' => 'required|numeric',
-                'courier' => 'required|string'
-            ]);
+        $validatedData = $request->validate([
+            'cart_id' => 'nullable|integer',
+            'product_id' => 'required_without:cart_id|integer',
+            'address' => 'required|string',
+            'delivery_details' => 'nullable|string',
+            'payment_details' => 'nullable|string',
+            'protection_fee' => 'required|numeric',
+            'origin' => 'required|numeric',
+            'destination' => 'required|numeric',
+            'weight' => 'required|numeric',
+            'courier' => 'required|string'
+        ]);
 
-            // Set default origin and protection_fee
-            $validatedData['origin'] = 114;
-            $validatedData['protection_fee'] = 10000;
+        $product = null;
+        $qty = 1;
 
-            // Initialize variables
-            $orderDetails = [];
-            $totalPrice = 0;
-
-            // Process cart items or single product
-            if ($validatedData['cart_id'] !== null) {
-                // Retrieve cart items for the user
-                $cartItems = $request->user()->carts()->whereIn('id', (array)$validatedData['cart_id'])->get();
-
-                // Calculate total price from cart items
-                foreach ($cartItems as $cartItem) {
-                    $product = $cartItem->product;
-                    $totalPrice += $product->price * $cartItem->qty;
-
-                    // Store order details for each cart item
-                    $orderDetails[] = [
-                        'product_id' => $product->id,
-                        'qty' => $cartItem->qty,
-                        'price' => $product->price,
-                        'shipping_fee' => $this->getShippingCost($validatedData['origin'], $validatedData['destination'], $product->weight * $cartItem->qty, $validatedData['courier']),
-                        'cart_id' => $cartItem->id,
-                    ];
-                }
-            } elseif ($validatedData['product_id'] !== null) {
-                // If product_id is provided directly
-                $product = Product::findOrFail($validatedData['product_id']);
-                $totalPrice += $product->price;
-
-                // Store order details for the single product
-                $orderDetails[] = [
-                    'product_id' => $product->id,
-                    'qty' => 1,
-                    'price' => $product->price,
-                    'shipping_fee' => $this->getShippingCost($validatedData['origin'], $validatedData['destination'], $product->weight, $validatedData['courier']),
-                    'cart_id' => null,
-                ];
+        if ($validatedData['cart_id'] !== null) {
+            $cartItem = $request->user()->carts()->find($validatedData['cart_id']);
+            if ($cartItem) {
+                $product = $cartItem->product;
+                $validatedData['product_id'] = $product->id;
+                $qty = $cartItem->qty;
+            } else {
+                return response()->json(['message' => 'Cart item not found'], 404);
             }
+        } elseif ($validatedData['product_id'] !== null) {
+            $product = Product::findOrFail($validatedData['product_id']);
+        } else {
+            return response()->json(['message' => 'Either cart_id or product_id must be provided'], 400);
+        }
+    if ($product) {
+        $totalPrice = ($product->price * $qty);
 
-            // Calculate total cost including protection fee
-            $total = $totalPrice + $validatedData['protection_fee'];
+        $shippingCost = $this->getShippingCost(
+            $validatedData['origin'],
+            $validatedData['destination'],
+            $validatedData['weight'],
+            $validatedData['courier']
+        );
 
-            // Create a new order
-            $order = Order::create([
-                'user_id' => $request->user()->id,
-                'status' => 'new',
-                'total' => $total,
-            ]);
+        if ($shippingCost === null) {
+            return response()->json(['message' => 'Failed to get shipping cost'], 500);
+        }
 
-            // Create order details for each product
-            foreach ($orderDetails as $detail) {
-                $order->orderDetails()->create([
-                    'delivery_details' => $validatedData['delivery_details'],
-                    'payment_details' => $validatedData['payment_details'],
-                    'protection_fee' => $validatedData['protection_fee'],
-                    'origin' => $validatedData['origin'],
-                    'destination' => $validatedData['destination'],
-                    'courier' => $validatedData['courier'],
-                    'qty' => $detail['qty'],
-                    'weight' => $detail['qty'] * Product::find($detail['product_id'])->weight,
-                    'price' => $detail['price'],
-                    'shipping_fee' => $detail['shipping_fee'],
-                    'product_id' => $detail['product_id'],
-                    'cart_id' => $detail['cart_id'],
-                ]);
-            }
+        $total = $totalPrice + $shippingCost + $validatedData['protection_fee'];
 
-            // Initialize Midtrans
+        $order = Order::create([
+            'user_id' => $request->user()->id,
+            'status' => 'new',
+            'total' => $total,
+        ]);
+
+        $orderDetailData = [
+            'product_id' => $validatedData['product_id'],
+            'delivery_details' => $validatedData['delivery_details'],
+            'protection_fee' => $validatedData['protection_fee'],
+            'weight' => $validatedData['weight'],
+            'price' => $product->price,
+            'qty' => $qty,
+            'shipping_fee' => $shippingCost,
+            'origin' => $validatedData['origin'],
+            'destination' => $validatedData['destination'],
+            'courier' => $validatedData['courier'],
+            'order_id' => $order->id
+        ];
+
+        $orderDetail = OrderDetail::create($orderDetailData);
             $this->initializeMidtrans();
 
             // Prepare transaction details for Midtrans
-            $params = [
-                'transaction_details' => [
-                    'order_id' => $order->id,
-                    'gross_amount' => $order->total,
-                ],
-                'customer_details' => [
-                    'first_name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                ],
+            $transaction_details = [
+                'order_id' => $order->id,
+                'gross_amount' => $total,
             ];
 
-            // Get Snap Token from Midtrans
-            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            $transaction = [
+                'transaction_details' => $transaction_details,
+            ];
 
-            // Update order status and save Snap Token
-            $order->update(['snap_token' => $snapToken]);
+            try {
+                // Define transaction parameters
+                $params = array(
+                    'transaction_details' => array(
+                        'order_id' => $order->id, // Use your order ID here
+                        'gross_amount' => $total,
+                    ),
+                    'customer_details' => array(
+                        'first_name' => $request->user()->name,
+                        'email' => $request->user()->email,
+                    ),
+                );
 
-            return response()->json([
-                'snapToken' => $snapToken,
-                'redirectUrl' => \Midtrans\Snap::createTransaction($params)->redirect_url
-            ]);
-        } catch (\Exception $e) {
-            // Log the error
-            Log::error('Error in storing order: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to store order.'], 500);
+                // Get Snap Token from Midtrans
+                $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+                // Log Snap Token Response
+                if (!empty($snapToken)) {
+                    Log::info('Snap Token Response: ', ['snapToken' => $snapToken]);
+                }
+
+                // Update order status and save Snap Token
+                $order->snap_token = $snapToken;
+                $order->save();
+                $redirectUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
+
+                return response()->json([
+                    'snapToken' => $snapToken,
+                    'redirectUrl' => $redirectUrl
+                ]);
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
         }
     }
+
+
 
     public function handlePaymentNotification(Request $request)
     {
