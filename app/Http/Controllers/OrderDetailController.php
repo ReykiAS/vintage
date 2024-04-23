@@ -106,7 +106,7 @@ class OrderDetailController extends Controller
             $transaction = [
                 'transaction_details' => $transaction_details,
             ];
-            $expiryTime = date('Y-m-d H:i:s O', strtotime('+2 minutes'));
+            $expiryTime = date('Y-m-d H:i:s O', strtotime('+1 minutes'));
             try {
                 // Define transaction parameters
                 $params = array(
@@ -121,7 +121,7 @@ class OrderDetailController extends Controller
                     'expiry' => array(
                         'start_time' => $expiryTime,
                         'unit' => 'minutes',
-                        'duration' => 2
+                        'duration' => 1
                     )
                 );
 
@@ -150,6 +150,7 @@ class OrderDetailController extends Controller
                     'snapToken' => $snapToken,
                     'redirectUrl' => $redirectUrl
                 ]);
+                return response()->json(['status' => 'OK']);
 
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 500);
