@@ -22,6 +22,8 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'price' => $this->price,
             'size' => $this->variants->isNotEmpty() ? $this->variants->pluck('size')->first() : null,
+            'favorite' => $this->favorite->count(),
+
         ];
         if ($discountedPrice !== $originalPrice) {
             $data['discounted_price'] = $discountedPrice;

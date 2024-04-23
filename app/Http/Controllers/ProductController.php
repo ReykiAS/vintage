@@ -27,7 +27,7 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
 
-        $validated['user_id'] = auth()->id(); // atau auth()->user()->id
+        $validated['user_id'] = auth()->id(); 
 
         $product = Product::create($validated);
 
