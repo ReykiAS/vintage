@@ -27,14 +27,12 @@ class OrderDetailController extends Controller
             'product_id' => 'required_without:cart_id|integer',
             'delivery_details' => 'nullable|string',
             'payment_details' => 'nullable|string',
-            'protection_fee' => 'required|numeric',
             'destination' => 'required|numeric',
             'courier' => 'required|string'
         ]);
 
         $product = null;
         $qty = 1;
-
         if ($validatedData['cart_id'] !== null) {
             $cartItem = $request->user()->carts()->find($validatedData['cart_id']);
             if ($cartItem) {
@@ -55,6 +53,7 @@ class OrderDetailController extends Controller
             // Ambil weight dari product
             $weight = $product->weight;
             $origin = 114;
+            $protection_fee = 10000;
             $shippingCost = $this->getShippingCost(
                 $origin,
                 $validatedData['destination'],
@@ -66,12 +65,12 @@ class OrderDetailController extends Controller
                 return response()->json(['message' => 'Failed to get shipping cost'], 500);
             }
 
-            $total = $totalPrice + $shippingCost + $validatedData['protection_fee'];
+            $total = $totalPrice + $shippingCost + $protection_fee;
 
             $orderDetailData = [
                 'product_id' => $validatedData['product_id'],
                 'delivery_details' => $validatedData['delivery_details'],
-                'protection_fee' => $validatedData['protection_fee'],
+                'protection_fee' =>  $protection_fee,
                 'weight' => $weight, // Menggunakan weight dari product
                 'total' => $total,
                 'qty' => $qty,
@@ -104,11 +103,10 @@ class OrderDetailController extends Controller
                 'gross_amount' => $total,
             ];
 
-
             $transaction = [
                 'transaction_details' => $transaction_details,
             ];
-
+            $expiryTime = date('Y-m-d H:i:s O', strtotime('+2 minutes'));
             try {
                 // Define transaction parameters
                 $params = array(
@@ -120,6 +118,11 @@ class OrderDetailController extends Controller
                         'first_name' => $request->user()->name,
                         'email' => $request->user()->email,
                     ),
+                    'expiry' => array(
+                        'start_time' => $expiryTime,
+                        'unit' => 'minutes',
+                        'duration' => 2
+                    )
                 );
 
                 // Get Snap Token from Midtrans
@@ -129,16 +132,42 @@ class OrderDetailController extends Controller
                 if (!empty($snapToken)) {
                     Log::info('Snap Token Response: ', ['snapToken' => $snapToken]);
                 }
+                $product = Product::find($order->product_id);
+                if ($product) {
+                    $product->qty -= $order->qty;
+                    $product->save();
+                }
 
+                $cartItem = Cart::where('id', $order->cart_id)->first();
+                if ($cartItem) {
+                    // Log qty dari cart
+                    Log::info('Qty from Cart: ' . $cartItem->qty);
+
+                    // Log qty dari order
+                    Log::info('Qty from Order: ' . $order->qty);
+
+                    // Mengurangi qty produk di tabel product
+                    $product = Product::find($order->product_id);
+                    if ($product) {
+                        $product->qty -= $cartItem->qty; // Mengurangi qty produk sesuai dengan qty di cart
+                        $product->save();
+                    }
+
+                    // Hapus item dari tabel cart
+                    $cartItem->delete();
+                }
                 // Update order status and save Snap Token
+
                 $order->snap_token = $snapToken;
                 $order->save();
                 $redirectUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
+
 
                 return response()->json([
                     'snapToken' => $snapToken,
                     'redirectUrl' => $redirectUrl
                 ]);
+
             } catch (\Exception $e) {
                 return response()->json(['error' => $e->getMessage()], 500);
             }
@@ -155,18 +184,56 @@ class OrderDetailController extends Controller
     $order = Order::where('order_id', $orderId)->first();
 
     if ($order) {
-        // Update order status based on transaction status and fraud status
+
         if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
-            // Kurangi stok produk
-            $product = Product::find($order->product_id);
-            if ($product) {
-                $product->qty -= $order->qty;
-                $product->save();
-            }
-            Cart::where('id', $order->cart_id)->delete();
             $order->status = 'Onprocess';
-        } else if ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
+        } elseif ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
             $order->status = 'Failed';
+            $product = Product::find($order->product_id);
+
+            if ($order->cart_id) {
+                $cartItem = Cart::where('id', $order->cart_id)
+                                ->where('user_id', $order->user_id)
+                                ->where('product_id', $order->product_id)
+                                ->first();
+
+                if ($cartItem) {
+                    // Mengembalikan qty ke tabel cart
+                    $cartItem->qty += $order->qty;
+                    $cartItem->save();
+
+                    // Mengembalikan qty ke tabel product
+                    $product = Product::find($order->product_id);
+                    if ($product) {
+                        $product->qty += $order->qty;
+                        $product->save();
+                    }
+                } else {
+                    // Jika cart item tidak ditemukan, tambahkan baru
+                    Cart::create([
+                        'id' => $order->cart_id,
+                        'user_id' => $order->user_id,
+                        'product_id' => $order->product_id,
+                        'qty' => $order->qty,
+                    ]);
+
+                    // Mengembalikan qty ke tabel product
+                    $product = Product::find($order->product_id);
+                    if ($product) {
+                        $product->qty += $order->qty;
+                        $product->save();
+                    }
+                }
+            } else {
+                // Mengembalikan qty ke tabel product jika tidak berasal dari cart
+                $product = Product::find($order->product_id);
+                if ($product) {
+                    $product->qty += $order->qty;
+                    $product->save();
+                } else {
+                    return response()->json(['message' => 'Product not found'], 404);
+                }
+            }
         } else if ($transactionStatus == 'pending') {
             $order->status = 'Pending';
         }

@@ -35,14 +35,16 @@ class CartController extends Controller
         // Retrieve product details (assuming a relationship between Cart and Product)
         $product = Product::findOrFail($validated['product_id']);
 
-        // Check if product already exists in user's cart (assuming a user_id in the cart)
-        $existingCartItem = Cart::where('user_id', $request->user()->id)
+        $validated['user_id'] = $request->user()->id;
+
+        // Check if product already exists in user's cart
+        $existingCartItem = Cart::where('user_id', $validated['user_id'])
                                 ->where('product_id', $validated['product_id'])
                                 ->first();
 
         if ($existingCartItem) {
             // Update quantity for existing item
-            $existingCartItem->qty += $validated['qty']; 
+            $existingCartItem->qty += $validated['qty'];
             if ($product->qty < $existingCartItem->qty) {
                 return response()->json(['error' => 'Insufficient stock available'], 400);
             }
