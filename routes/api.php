@@ -34,7 +34,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function() {
         Route::post('/logout', [UserController::class, 'logout']);
-
+        Route::apiResource('/user', UserController::class)->except(['store']);
         // Product
         Route::apiResource('products', ProductController::class)->except(['index', 'show']);
         Route::put('/products/{id}/restore', [ProductController::class, 'restore']);

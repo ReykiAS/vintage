@@ -9,7 +9,7 @@ use App\Http\Requests\BrandUpdateRequest as RequestsBrandUpdateRequest;
 
 class BrandController extends Controller
 {
-    /**
+    /* *
      * Display a listing of the resource.
      */
     public function index()
@@ -64,7 +64,6 @@ class BrandController extends Controller
 
         return response()->json(['message' => 'Brand succesfully updated', 'brand' => BrandResource::make($brand)->withDetail()]);
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -95,7 +94,7 @@ class BrandController extends Controller
 
         return response()->json(['message' => 'Brand succesfully restored.']);
     }
-    
+
     public function showSoftDeleted()
     {
         $deletedBrand = Brand::onlyTrashed()->get();

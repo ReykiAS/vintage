@@ -26,10 +26,7 @@ class UserController extends Controller
         try {
             $validated = $request->validated();
             $user = User::create($validated);
-
-            $token = $user->createToken('user_token')->plainTextToken;
-
-        return response()->json(['message' => 'User created successfully', 'token' => $token], 201);
+            return response()->json(['message' => 'User berhasil dibuat', 'user' => $user], 201);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error occurred while creating user: ' . $e->getMessage()], 500);
         }

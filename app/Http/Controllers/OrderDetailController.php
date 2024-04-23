@@ -25,7 +25,6 @@ class OrderDetailController extends Controller
         $validatedData = $request->validate([
             'cart_id' => 'nullable|integer',
             'product_id' => 'required_without:cart_id|integer',
-            'address' => 'required|string',
             'delivery_details' => 'nullable|string',
             'payment_details' => 'nullable|string',
             'protection_fee' => 'required|numeric',
@@ -105,7 +104,7 @@ class OrderDetailController extends Controller
                 'gross_amount' => $total,
             ];
 
-        
+
             $transaction = [
                 'transaction_details' => $transaction_details,
             ];
@@ -165,10 +164,6 @@ class OrderDetailController extends Controller
                 $product->save();
             }
             Cart::where('id', $order->cart_id)->delete();
-
-            // Hapus cart_id
-
-
             $order->status = 'Onprocess';
         } else if ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
             $order->status = 'Failed';
