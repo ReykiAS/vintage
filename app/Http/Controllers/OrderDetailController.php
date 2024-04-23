@@ -132,30 +132,13 @@ class OrderDetailController extends Controller
                 if (!empty($snapToken)) {
                     Log::info('Snap Token Response: ', ['snapToken' => $snapToken]);
                 }
+                Cart::where('id', $order->cart_id)->delete();
                 $product = Product::find($order->product_id);
                 if ($product) {
                     $product->qty -= $order->qty;
                     $product->save();
                 }
 
-                $cartItem = Cart::where('id', $order->cart_id)->first();
-                if ($cartItem) {
-                    // Log qty dari cart
-                    Log::info('Qty from Cart: ' . $cartItem->qty);
-
-                    // Log qty dari order
-                    Log::info('Qty from Order: ' . $order->qty);
-
-                    // Mengurangi qty produk di tabel product
-                    $product = Product::find($order->product_id);
-                    if ($product) {
-                        $product->qty -= $cartItem->qty; // Mengurangi qty produk sesuai dengan qty di cart
-                        $product->save();
-                    }
-
-                    // Hapus item dari tabel cart
-                    $cartItem->delete();
-                }
                 // Update order status and save Snap Token
 
                 $order->snap_token = $snapToken;
@@ -234,6 +217,8 @@ class OrderDetailController extends Controller
                     return response()->json(['message' => 'Product not found'], 404);
                 }
             }
+            $order->snap_token = null;
+            $order->save();
         } else if ($transactionStatus == 'pending') {
             $order->status = 'Pending';
         }
